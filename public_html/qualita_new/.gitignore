@@ -1,0 +1,83 @@
+# Yii 1 generated assets and runtime files
+/assets/*
+!/assets/.gitignore
+/protected/runtime/*
+!/protected/runtime/.gitignore
+
+# Logs, cache and temporary files
+*.log
+*.log.*
+*.tmp
+*.temp
+*.cache
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+/temp/*
+!/temp/.gitignore
+
+# Local configuration and secrets
+/.env
+/.env.*
+!/.env.example
+/protected/config/*.local.php
+/protected/config/local.php
+/protected/config/*-local.php
+/protected/config/params-local.php
+
+# Dependencies installed locally
+/vendor/
+/node_modules/
+/bower_components/
+
+# Composer local artifacts
+/composer.phar
+/auth.json
+
+# Yii/Gii/test generated output
+/protected/data/*.db
+/protected/tests/report/*
+!/protected/tests/report/.gitignore
+
+# User-uploaded/generated business files
+/images/allegati/*
+!/images/allegati/.gitignore
+/images/allegati_azioni/*
+!/images/allegati_azioni/.gitignore
+/images/allegati_reclami/*
+!/images/allegati_reclami/.gitignore
+/images/diari_verifiche/*
+!/images/diari_verifiche/.gitignore
+/images/verbali_verifiche/*
+!/images/verbali_verifiche/.gitignore
+/protected/data/nc/*
+!/protected/data/nc/.gitignore
+
+# IDE/editor project files
+/.idea/
+/.vscode/
+/nbproject/
+*.iml
+*.ipr
+*.iws
+.project
+.settings/
+.buildpath
+.classpath
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local archives and database dumps
+*.sql
+*.sql.gz
+*.dump
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar

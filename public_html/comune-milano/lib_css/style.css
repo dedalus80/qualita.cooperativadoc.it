@@ -1,0 +1,174 @@
+body, select, textarea{
+	  color: #000000;
+	  font-family: "Comic Sans MS", cursive;
+	  font-size:12px;
+	  background: #76c9e2;
+    text-align: center;
+  }
+  select , input, textarea{
+	   font-size:11px;
+	   border: 1px dotted #3d6bad;
+     background: #FFFFFF;
+  }
+  
+  .left{
+    text-align:right;
+    font-size: 12px;
+  }
+  .right{
+	  font-size: 12px;
+	  text-align:left;
+  }
+  .clear{clear:both}
+  .desc , .red{
+		color: #3d6bad;
+ 		font-size: 14px;
+		font-style:oblique;
+		font-weight: bold;  
+		padding-top: 8px;
+		padding-bottom:8px;
+		padding-left:100px;
+	}
+  .desc-small{
+	  color: #3d6bad;
+ 		font-size: 12px;
+		font-style:oblique;
+    font-weight: bold;  
+  }
+  .desc-black{
+	  margin-top:20px;
+	 margin-bottom: 20px;
+	  color: #00000;
+ 		font-size: 14px;
+		font-style:oblique;
+    font-weight: bold; 
+	text-align: left; 
+  }
+  #pagina{
+	  
+	  text-align: center;
+	  background-image: url(../lib_img/sfondo.png);
+	  background-position:bottom;
+	  background-repeat: no-repeat;
+	  padding-left: 50px;
+	  padding-right:20px;
+   }
+#sito{
+  margin: 50 auto 0 auto;
+  width: 900px;
+	border: 2px solid #3d6bad;
+	background: #FFFFFF;
+  
+}
+  
+  #top{
+    background-image: url(../lib_img/topLogo.png);
+	background-repeat: no-repeat;
+
+    height: 190px;
+    width: 800px;
+  }
+	
+	
+	}
+	#fiore{
+		height:150px;
+    background-image: url(../lib_img/fiore.png);
+	background-position:bottom right;
+	  background-repeat: no-repeat;
+	}
+	
+	
+  #tabella{ padding-bottom: 260px; }
+  .pulsante{
+    width:120px;
+	  height:74px;
+    color: #3d6bad;
+    font-size: 15px;
+    font-weight: bold;  
+    vertical-align: center;
+    padding-top: 30px;
+    border: 0px;
+  }
+  .pulsante:hover{  color: #ffffff;}
+  
+  .red{
+	color: #d50c1c;	
+  }
+  
+  .alert{
+	  text-align: left;
+	  margin-left:100px;
+	  margin-right: 100px;
+	  margin-top: 20px;
+	  margin-bottom: 15px;
+	  background: fdf4a5;
+	  padding-top:20px;
+	  padding-bottom: 20px;
+	  border: #3d6bad 2px solid;
+  }
+  
+  .invia{
+	  	background-image:url(../lib_img/uccello-i.png);
+      background-repeat:no-repeat;
+      cursor: pointer;
+	cursor: hand;
+  }
+  .resetta{
+	  	background-image:url(../lib_img/uccello-a.png);
+	 background-repeat:no-repeat;
+    cursor: pointer;
+	cursor: hand;
+  }
+  
+  .invia:hover{
+	  	background-image:url(../lib_img/uccello-i-h.png);
+	 background-repeat:no-repeat;
+  }
+  .resetta:hover{
+	  	background-image:url(../lib_img/uccello-a-h.png);
+	 background-repeat:no-repeat;
+  }
+  
+  
+  
+  
+  #footer{
+	  
+	  text-align:right;
+	  font-size:14px;
+	  
+	  color: #3d6bad;
+	  font-weight:bold;
+	  margin: 15 auto 0 auto;
+  width: 900px;
+	  
+  }
+  .footerLink{
+  	text-decoration: none;
+	color:#fdf4a5;
+	
+  }
+  .footerLink:hover{
+  	color:#924633;
+  }
+  
+  .linkTesto{
+	text-decoration: none; 
+	color:#3d6bad;		
+  }
+  
+  .linkTesto:hover{
+	  color:#924633;
+	  text-decoration: none;
+  }
+  
+  .desc-small-black{
+	  color: #000000;
+ 		font-size: 12px;
+		font-style:oblique;
+    font-weight: bold;  
+  }
+  
+  
+  

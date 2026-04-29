@@ -1,0 +1,16 @@
+.focused-form .login-logo {
+margin-top: 30px; 
+margin-bottom: 30px;
+}
+footer {
+ height: 60px; 
+}
+.or_bold{
+    color:#e16040;
+    font-weight: 200;
+}
+#topnav.navbar-default .navbar-brand {
+background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
+
+
+}

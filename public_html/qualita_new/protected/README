@@ -1,0 +1,80 @@
+# Diagramma ER – Questionari
+
+```mermaid
+erDiagram
+    questionnaires {
+        INT id PK
+        VARCHAR title
+        TEXT description
+        INT client_id FK
+        TINYINT is_public
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    questionnaire_versions {
+        INT id PK
+        INT questionnaire_id FK
+        INT version_number
+        TEXT description
+        DATETIME created_at
+    }
+
+    questionnaire_sections {
+        INT id PK
+        INT version_id FK
+        VARCHAR title
+        INT order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    questions {
+        INT id PK
+        INT section_id FK
+        TEXT text
+        ENUM type
+        INT order
+        DATETIME created_at
+        DATETIME updated_at
+        DATETIME deleted_at
+    }
+
+    question_options {
+        INT id PK
+        INT question_id FK
+        VARCHAR option_text
+        INT value
+        INT order
+    }
+
+    questionnaire_participants {
+        INT id PK
+        INT questionnaire_id FK
+        INT version_id FK
+        VARCHAR name
+        VARCHAR surname
+        VARCHAR email
+        VARCHAR phone
+        DATETIME created_at
+        DATETIME completed_at
+    }
+
+    answers {
+        INT id PK
+        INT participant_id FK
+        INT question_id FK
+        TEXT answer_text
+        INT answer_value
+        DATETIME created_at
+    }
+
+    questionnaires ||--o| questionnaire_versions : "has"
+    questionnaire_versions ||--o| questionnaire_sections : "has"
+    questionnaire_sections ||--o| questions : "has"
+    questions ||--o| question_options : "has"
+    questionnaires ||--o| questionnaire_participants : "has"
+    questionnaire_versions ||--o| questionnaire_participants : "has"
+    questionnaire_participants ||--o| answers : "has"
+    questions ||--o| answers : "has"
+```

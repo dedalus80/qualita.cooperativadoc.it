@@ -1,0 +1,6 @@
+table { overflow: visible !important; vertical-align: top; }
+tr { page-break-inside: avoid; vertical-align: top;  }
+td { vertical-align: top; }
+thead, tfoot {
+    display: table-row-group;
+}

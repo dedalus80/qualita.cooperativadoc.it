@@ -1,0 +1,198 @@
+body {
+    font-weight: 500;
+   /* font-size: 1.05em; */
+    font-family: 'Raleway', Arial, sans-serif;
+}
+
+label , .normal-text , .btn , input , select , textarea{
+	font-size: 13px;
+}
+
+.hidden-on-start{
+	display: none;
+}
+
+em{
+	color: #9C3588 !important;
+	font-weight: 700;
+}
+
+.obbligatori{
+font-style: italic;
+	text-align: right
+}
+
+.row-30{
+	margin-top: 30px;
+}
+
+.label-left{
+	text-align: left !important;
+}
+.input-right{
+	text-align: right !important;
+}
+
+.semi-trasparent{
+	opacity: 0.7
+}
+
+.btn-stessopiano{
+	background-color: #78256f;
+	border-color: #9C3588;
+	color: #FFF;
+}
+
+.btn-stessopiano:hover{
+	background-color: #9C3588;
+	border-color: #78256f;
+	color: #FFF;
+}
+
+.focused-form {
+background: url(../img/bg.jpg) no-repeat center center fixed;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+background-size: cover;
+}
+
+.inter-label{
+	font-size: 1.1em;
+	font-weight: 700;
+	margin: 10px 0px;
+}
+
+.btn{
+	font-weight: 700;
+}
+
+.top5{
+	padding-top: 5px;
+}
+
+.datepicker table tr td.today, .datepicker table tr td.today:hover, .datepicker table tr td.today.disabled, .datepicker table tr td.today.disabled:hover .datepicker .active, .datepicker table tr td.today:hover, .datepicker table tr td.today:hover:hover, .datepicker table tr td.today.disabled:hover, .datepicker table tr td.today.disabled:hover:hover {
+background-color: #ec7405!important;
+border-color: #ec7405!important;
+border-radius: 3px;
+}
+
+.datepicker table tr td.active:focus, .datepicker table tr td.active:hover:focus, .datepicker table tr td.active.disabled:focus, .datepicker table tr td.active.disabled:hover:focus, .datepicker table tr td.active:active, .datepicker table tr td.active:hover:active, .datepicker table tr td.active.disabled:active, .datepicker table tr td.active.disabled:hover:active, .datepicker table tr td.active.active, .datepicker table tr td.active:hover.active, .datepicker table tr td.active.disabled.active, .datepicker table tr td.active.disabled:hover.active, .open > .dropdown-toggle.datepicker table tr td.active, .open > .dropdown-toggle.datepicker table tr td.active:hover, .open > .dropdown-toggle.datepicker table tr td.active.disabled, .open > .dropdown-toggle.datepicker table tr td.active.disabled:hover {
+color: white;
+background-color: #9c3588;
+border-color: #9c3588;
+border-radius: 3px;	
+}
+
+.row-20{
+	padding-top: 18px;
+}
+
+.orange{
+	background: #ec7405;
+}
+
+.badge {
+	padding: 10px 7px;
+	font-size: 12px;
+	color: #FFF !important;
+	border-radius: 50%;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16),0 2px 10px 0 rgba(0, 0, 0, .12);
+	
+}
+
+.titolo .table-label{
+	line-height: 30px;
+}
+.titolo{
+	background: #9c3588;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16),0 2px 10px 0 rgba(0, 0, 0, .12);
+	padding: 5px 10px;
+	color: #FFF;
+	margin-top: 20px;
+	margin-bottom: 10px;
+	text-transform: uppercase;
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.modal-header{
+	background: #9c3588;
+	color: #FFF !important;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .16),0 2px 10px 0 rgba(0, 0, 0, .12);
+}
+
+.first-row{
+	border-top: none !important;
+}
+
+
+#space-top {
+     margin-top: 10px;
+}
+.input{
+    margin: 0px 0px 0px 0px ;
+}
+.info li{
+    list-style: none !important;  
+    margin-bottom: 10px;
+}
+
+#link-informativa{
+    color: #5f7676 ;
+    font-weight: 600;
+    text-decoration: underline; 
+}
+
+#link-informativa:hover{
+    text-decoration: underline;
+}
+#title-convegno{
+    text-align: center;
+    margin-bottom: 20px;
+}
+#title-convegno h2{
+    line-height: 25px;
+    font-size: 24px;
+}
+#title-convegno h3{
+    line-height: 21px;
+    font-size: 19px;
+}
+
+.input-danger{
+    border: #e64433 1px solid;
+}
+.input-success{
+    border: #7cb342 1px solid; 
+}
+.form-control:focus {
+    border: 1px solid #cbd6d6;
+}
+.error{
+    font-size: 0.9em; 
+    color:#e64433 ;
+        
+}
+
+
+#wait .modal-dialog {
+    top: 30%;
+    width: 430px;
+    background-color: #9c3588;
+    border-color: #9c3588;
+    padding: 10px 0px;
+    color: #FFF;
+    border-radius: 4px;
+    text-align: center;
+    box-shadow: 0 4px 9px 0 rgba(0, 0, 0, 0.24) !important;
+    transition: width .2s ease-out, padding-top .2s !important;
+}
+#wait h2{
+    color: #FFF !important;
+    text-transform: uppercase;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+

@@ -1,0 +1,1273 @@
+<html>
+<head>
+<title>IN VACANZA DALLO SMOG</title>
+<script language="javascript">
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */  
+/* SET LISTA PER INSERIMENTO  */  
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+   
+  function setIdLista(){
+  
+    var vacanzaLuogo = document.getElementById('VAR_casa_vacanza').options[document.getElementById('VAR_casa_vacanza').selectedIndex].value;
+    var vacanzaData  = document.getElementById('VAR_data_vacanza').options[document.getElementById('VAR_data_vacanza').selectedIndex].value;
+    
+    switch(vacanzaLuogo){
+      case '1':
+        switch(vacanzaData){
+          case '1': document.getElementById('id_lista').value = '40955' ; break;
+          case '2': document.getElementById('id_lista').value = '40957' ; break;
+          case '3': document.getElementById('id_lista').value = '40958' ; break;
+          case '4': document.getElementById('id_lista').value = '40959' ; break;
+          case '5': document.getElementById('id_lista').value = '40960' ; break;
+          case '6': document.getElementById('id_lista').value = '40956' ; break;
+          default: document.getElementById('id_lista').value = '40985'; break;
+        }
+      break;
+      case '2':
+        switch(vacanzaData){
+          case '1': document.getElementById('id_lista').value = '40962' ; break;
+          case '2': document.getElementById('id_lista').value = '40963' ; break;
+          case '3': document.getElementById('id_lista').value = '40964' ; break;
+          case '4': document.getElementById('id_lista').value = '40965' ; break;
+          case '5': document.getElementById('id_lista').value = '40966' ; break;
+          case '6': document.getElementById('id_lista').value = '40961' ; break;
+          default: document.getElementById('id_lista').value = '40985' ; break;
+        }
+      break;
+      case '3':
+        switch(vacanzaData){
+          case '1': document.getElementById('id_lista').value = '40967' ; break;
+          case '2': document.getElementById('id_lista').value = '40968' ; break;
+          case '3': document.getElementById('id_lista').value = '40969' ; break;
+          case '4': document.getElementById('id_lista').value = '40970' ; break;
+          case '5': document.getElementById('id_lista').value = '40971' ; break;
+          case '6': document.getElementById('id_lista').value = '40972' ; break;
+          default: document.getElementById('id_lista').value = '40985' ; break;
+        }
+      break;
+      case '4':
+        switch(vacanzaData){
+          case '1': document.getElementById('id_lista').value = '40973' ; break;
+          case '2': document.getElementById('id_lista').value = '40974' ; break;
+          case '3': document.getElementById('id_lista').value = '40975' ; break;
+          case '4': document.getElementById('id_lista').value = '40976' ; break;
+          case '5': document.getElementById('id_lista').value = '40977' ; break;
+          case '6': document.getElementById('id_lista').value = '40978' ; break;
+          default: document.getElementById('id_lista').value = '40985' ; break;
+        }
+      break;
+      case '5':
+        switch(vacanzaData){
+          case '1': document.getElementById('id_lista').value = '40979' ; break;
+          case '2': document.getElementById('id_lista').value = '40980' ; break;
+          case '3': document.getElementById('id_lista').value = '40981' ; break;
+          case '4': document.getElementById('id_lista').value = '40982' ; break;
+          case '5': document.getElementById('id_lista').value = '40983' ; break;
+          case '6': document.getElementById('id_lista').value = '40984' ; break;
+          default: document.getElementById('id_lista').value = '40985'; break;
+        }
+      break;
+      default: document.getElementById('id_lista').value = '40985'  ; break;
+    }
+  }
+  
+  function CkForm(element) {
+      
+    
+    
+    
+    
+    
+    if(element.VAR_cognome.value==""){
+      alert("Il campo Cognome è obbligatorio!");
+      element.VAR_cognome.focus();
+      return false;
+    }
+
+    if(element.VAR_nome.value=="")  {
+      alert("Il campo Nome è obbligatorio!");
+      element.VAR_nome.focus();
+      return false;
+    }
+    
+
+    if(element.VAR_campo_1.value==""){
+      alert("Il campo Luogo di Nascita è obbligatorio!");
+      element.VAR_campo_1.focus();
+      return false;
+    }
+    
+    var tmp_a_n  = element.VAR_a_n.options[element.VAR_a_n.selectedIndex].value;
+    var tmp_m_n  = element.VAR_m_n.options[element.VAR_m_n.selectedIndex].value;   
+    var tmp_g_n  = element.VAR_g_n.options[element.VAR_g_n.selectedIndex].value;   
+		tmp_a_n = parseInt(tmp_a_n, 10);
+		tmp_m_n = parseInt(tmp_m_n, 10);
+		tmp_g_n = parseInt(tmp_g_n, 10);
+
+    if(tmp_a_n != 0 || tmp_m_n != 0 || tmp_g_n != 0){
+      if(tmp_a_n == 0 || tmp_m_n == 0 || tmp_g_n == 0 ){
+        alert("Completare il campo Data di Nascita selezionando GIORNO, MESE e ANNO.");
+        return false;
+      }
+      if(!checkCompleteData(tmp_g_n, tmp_m_n, tmp_a_n)){
+        alert("Il campo Data di Nascita non è corretto.");
+        return false;
+      }
+    }
+    else{
+      alert("Completare il campo Data di Nascita selezionando GIORNO, MESE e ANNO.");
+      return false;
+    }
+    
+    
+    
+    if(element.VAR_citta.value==""){
+      alert("Il campo Città è obbligatorio!");
+      element.VAR_citta.focus();
+      return false;
+    }
+    
+     if(element.VAR_indirizzo.value==""){
+      alert("Il campo Indirizzo è obbligatorio!");
+      element.VAR_indirizzo.focus();
+      return false;
+    }
+    
+       if(element.VAR_numero_1.value=="")
+    {
+      alert("Il campo Numero Civico è obbligatorio!");
+      element.VAR_numero_1.focus();
+      return false;
+    }
+    else
+        {
+      var cont=element.VAR_numero_1.value;
+      var exp = /\D+/;
+      if(exp.test(cont)){
+        alert("Nel campo Numero Civico non è corretto!\nSono accettati solo caratteri numerici.");
+        element.VAR_numero_1.focus();
+        return false;
+      }        
+    }
+   
+    
+    if(element.VAR_iva.value=="")
+    {
+      alert("Il campo P. IVA / Cod. Fiscale è obbligatorio!");
+      element.VAR_iva.focus();
+      return false;
+    }
+    else    
+        {
+      cod = element.VAR_iva.value;
+      if( cod.length == 16 )
+        err = controllaCF(cod);
+      else if( cod.length == 11 )
+        err = controllaPIVA(cod);
+      else
+        err = "Il codice introdotto non e' valido:\n\n" +
+        "  - un codice fiscale deve essere lungo 16 caratteri;\n\n" +
+        "  - una partita IVA deve essere lunga 11 caratteri.\n";
+
+      if( err > '')
+      {
+        element.VAR_iva.focus();
+        alert("VALORE ERRATO\n\n" + err + "\nCorreggi e riprova!");
+        return false;
+      }
+    }
+    
+    
+    
+    if(element.VAR_cap.value==""){
+      alert("Il campo CAP è obbligatorio!");
+      element.VAR_cap.focus();
+      return false;
+    }
+    else    
+    
+    {
+      var cont=element.VAR_cap.value;
+      var exp = /\D+/;
+      if(cont.length != 5 || exp.test(cont)){
+        alert("Il campo CAP non è corretto.\nSono accettati 5 caratteri numerici!");
+        element.VAR_cap.focus();
+        return false;
+      }
+    }
+    
+    
+       if(element.VAR_email.value=="")
+    {
+      alert("Il campo e-mail è obbligatorio!");
+      element.VAR_email.focus();
+      return false;
+    }
+    else
+        {
+      var email_reg_exp = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-]{2,})+\.)+([a-zA-Z0-9]{2,})+$/;
+
+      if (!email_reg_exp.test(element.VAR_email.value) || (element.VAR_email.value == "") || (element.VAR_email.value == "undefined")){
+        element.VAR_email.focus();
+        alert("Inserire un indirizzo e-mail valido!");
+        return false;
+      }
+    }
+    
+    
+    
+    
+       if(element.VAR_cellulare.value=="")
+    {
+      alert("Il campo Cellulare è obbligatorio!");
+      element.VAR_cellulare.focus();
+      return false;
+    }
+    else
+        {
+      var ctrl_cell = /^([\+]{0,1})([0-9]+)$/;
+      
+      if(!ctrl_cell.test(element.VAR_cellulare.value)){
+        alert("Il Cellulare inserito non è corretto!");
+        element.VAR_cellulare.focus();
+        return false;
+      }
+    }
+    
+    
+    
+    
+    
+     
+    
+     if(element.VAR_campo_2.value==""){
+      alert("Il campo N Documento è obbligatorio!");
+      element.VAR_campo_2.focus();
+      return false;
+    }
+    
+    
+    
+       if(element.VAR_campo_3.value==""){
+      alert("Il campo Luogo di rilascio del documento è obbligatorio!");
+      element.VAR_campo_3.focus();
+      return false;
+    }
+    
+    
+    
+    
+        var tmp_a_1  = element.VAR_a_1.options[element.VAR_a_1.selectedIndex].value;
+    var tmp_m_1  = element.VAR_m_1.options[element.VAR_m_1.selectedIndex].value;   
+    var tmp_g_1  = element.VAR_g_1.options[element.VAR_g_1.selectedIndex].value;   
+		tmp_a_1 = parseInt(tmp_a_1, 10);
+		tmp_m_1 = parseInt(tmp_m_1, 10);
+		tmp_g_1 = parseInt(tmp_g_1, 10);
+
+    if(tmp_a_1 != 0 || tmp_m_1 != 0 || tmp_g_1 != 0){
+      if(tmp_a_1 == 0 || tmp_m_1 == 0 || tmp_g_1 == 0 ){
+        alert("Completare il campo Data di rilascio del documento selezionando GIORNO, MESE e ANNO.");
+        return false;
+      }
+		
+      if(!checkCompleteData(tmp_g_1, tmp_m_1, tmp_a_1))
+	    {
+        alert("Il campo  Data di rilascio del documento non è corretto.");
+        return false;
+      }
+    }
+    else{
+      alert("Completare il campo  Data di rilascio del documento selezionando GIORNO, MESE e ANNO.");
+      return false;
+    }
+    
+    
+    
+    
+    
+      if(element.VAR_campo_4.value==""){
+      alert("Il campo Cognome del figlio/a è obbligatorio!");
+      element.VAR_campo_4.focus();
+      return false;
+    }
+    
+    if(element.VAR_campo_5.value==""){
+      alert("Il campo Nome del figlio/a è obbligatorio!");
+      element.VAR_campo_5.focus();
+      return false;
+    }
+    
+     if(element.VAR_campo_6.value==""){
+      alert("Il campo Luogo Di Nascita del figlio/a è obbligatorio!");
+      element.VAR_campo_6.focus();
+      return false;
+    }
+    
+    
+    
+    
+    
+     var tmp_a_2  = element.VAR_a_2.options[element.VAR_a_2.selectedIndex].value;
+    var tmp_m_2  = element.VAR_m_2.options[element.VAR_m_2.selectedIndex].value;   
+    var tmp_g_2  = element.VAR_g_2.options[element.VAR_g_2.selectedIndex].value;   
+		tmp_a_2 = parseInt(tmp_a_2, 10);
+		tmp_m_2 = parseInt(tmp_m_2, 10);
+		tmp_g_2 = parseInt(tmp_g_2, 10);
+
+    if(tmp_a_2 != 0 || tmp_m_2 != 0 || tmp_g_2 != 0){
+      if(tmp_a_2 == 0 || tmp_m_2 == 0 || tmp_g_2 == 0 )
+      {
+        alert("Completare il campo Nascita del Figlio/a selezionando GIORNO, MESE e ANNO.");
+        return false;
+      }
+		
+      if(!checkCompleteData(tmp_g_2, tmp_m_2, tmp_a_2))
+	    {
+        alert("Il campo Nascita del Figlio/a non è corretto.");
+        return false;
+      }
+    }
+    else{
+      alert("Completare il campo Nascita del Figlio/a selezionando GIORNO, MESE e ANNO.");
+      return false;
+    }
+    
+   
+    
+    if(element.VAR_campo_7.value==""){
+      alert("Il campo Tessera Sanitaria è obbligatorio!");
+      element.VAR_campo_7.focus();
+      return false;
+    }
+    
+   
+    
+    if(element.VAR_campo_8.value=="")
+    {
+      alert("Il campo P. IVA / Cod. Fiscale è obbligatorio!");
+      element.VAR_campo_8.focus();
+      return false;
+    }
+    else    
+        {
+      cod = element.VAR_campo_8.value;
+      if( cod.length == 16 )
+        err = controllaCF(cod);
+      else if( cod.length == 11 )
+        err = controllaPIVA(cod);
+      else
+        err = "Il codice introdotto non e' valido:\n\n" +
+        "  - un codice fiscale deve essere lungo 16 caratteri;\n\n" +
+        "  - una partita IVA deve essere lunga 11 caratteri.\n";
+
+      if( err > '')
+      {
+        element.VAR_campo_8.focus();
+        alert("VALORE ERRATO\n\n" + err + "\nCorreggi e riprova!");
+        return false;
+      }
+    }
+   
+    
+    
+    if(element.VAR_campo_9.value==""){
+      alert("Il campo Nome Scuola è obbligatorio!");
+      element.VAR_campo_9.focus();
+      return false;
+    }
+       
+    
+    
+    
+    
+        if(element.VAR_campo_10.value==""){
+      alert("Il campo Classe è obbligatorio!");
+      element.VAR_campo_10.focus();
+      return false;
+    }
+       
+    
+         if(element.VAR_numero_2.value==""){
+      alert("Il campo Zezione è obbligatorio!");
+      element.VAR_numero_2.focus();
+      return false;
+    }
+         
+    
+
+     
+       
+    
+    
+       
+    
+     
+     
+        if(element.VAR_select_4.options[element.VAR_select_4.selectedIndex].value==0)
+    {
+      alert("Il campo Utente Milano Ristorazione è obbligatorio!");
+      element.VAR_select_4.focus();
+      return false;
+    }
+    
+    
+    
+    
+    
+        if(element.VAR_select_5.options[element.VAR_select_5.selectedIndex].value==0)
+    {
+      alert("Il campo Dieta Sanitaria è obbligatorio!");
+      element.VAR_select_5.focus();
+      return false;
+    }
+    
+    
+    if(element.VAR_select_6.options[element.VAR_select_6.selectedIndex].value==0)
+    {
+      alert("Il campo Dieta Etico Religiosa è obbligatorio!");
+      element.VAR_select_6.focus();
+      return false;
+    }
+    
+    
+    if(element.VAR_casa_vacanza.options[element.VAR_casa_vacanza.selectedIndex].value==0)
+    {
+      alert("Specificare la destinazione della vacanza!");
+      element.VAR_casa_vacanza.focus();
+      return false;
+    }
+    
+    
+    if(element.VAR_data_vacanza.options[element.VAR_data_vacanza.selectedIndex].value==0)
+    {
+       alert("Specificare la data della vacanza!");
+      element.VAR_data_vacanza.focus();
+      return false;
+    }
+    
+    
+    if(document.getElementById('consenso').checked == false){
+      alert("E obbligatorio aver letto l\'informativa sulla privacy. \n E dare il sonsenso al trattamento dei dati !");
+      element.VAR_select_7.focus();
+      return false;
+    }
+    
+    
+    return true;
+  }
+  
+  function controllaPIVA(pi)
+  {
+    if( pi == '' )
+      return '';
+    if( pi.length != 11 )
+      return "La lunghezza della partita IVA non è\n" +"corretta: la partita IVA dovrebbe essere lunga\n" +"esattamente 11 caratteri.\n";
+        
+    validi = "0123456789";
+    for( i = 0; i < 11; i++ )
+    {
+      if( validi.indexOf( pi.charAt(i) ) == -1 )
+        return "La partita IVA contiene un carattere non valido `" +pi.charAt(i) + "'.\nI caratteri validi sono solo i numeri.\n";
+    }
+        
+    s = 0;
+    for( i = 0; i <= 9; i += 2 )
+      s += pi.charCodeAt(i) - '0'.charCodeAt(0);
+        
+    for( i = 1; i <= 9; i += 2 )
+    {
+      c = 2*( pi.charCodeAt(i) - '0'.charCodeAt(0) );
+      if( c > 9 )  c = c - 9;
+      s += c;
+    }
+        
+    if(( 10 - s%10 )%10 != pi.charCodeAt(10) - '0'.charCodeAt(0) )
+      return "La partita IVA non è valida:\n" +"il codice di controllo non corrisponde.\n";
+    
+    return '';
+  }
+  
+  function controllaCF(cf)
+  {
+    var validi, i, s, set1, set2, setpari, setdisp;
+    if( cf == '' )  return '';
+    cf = cf.toUpperCase();
+    if( cf.length != 16 )
+      return "La lunghezza del codice fiscale non è\n"
+                +"corretta: il codice fiscale dovrebbe essere lungo\n"
+                +"esattamente 16 caratteri.\n";
+    
+    validi = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for( i = 0; i < 16; i++ )
+    {
+      if( validi.indexOf( cf.charAt(i) ) == -1 )
+        return "Il codice fiscale contiene un carattere non valido `" +cf.charAt(i) +"'.\nI caratteri validi sono le lettere e le cifre.\n";
+    }
+    set1 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    set2 = "ABCDEFGHIJABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    setpari = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    setdisp = "BAKPLCQDREVOSFTGUHMINJWZYX";
+    s = 0;
+    
+    for( i = 1; i <= 13; i += 2 )
+      s += setpari.indexOf( set2.charAt( set1.indexOf( cf.charAt(i) )));
+        
+    for( i = 0; i <= 14; i += 2 )
+      s += setdisp.indexOf( set2.charAt( set1.indexOf( cf.charAt(i) )));
+        
+    if( s%26 != cf.charCodeAt(15)-'A'.charCodeAt(0) )
+      return "Il codice fiscale non è corretto:\n"+"il codice di controllo non corrisponde.\n";
+        
+    return "";
+  }
+  </script>
+
+
+<STYLE type="text/css">
+
+  body, select, textarea{
+	  color: #000000;
+	  font-family: "Comic Sans MS", cursive;
+	  font-size:12px;
+	  background: #76c9e2;
+    text-align: center;
+  }
+  select , input, textarea{
+	   font-size:11px;
+	   border: 1px dotted #3d6bad;
+     background: #FFFFFF;
+  }
+  
+  .left{
+    text-align:right;
+    font-size: 12px;
+  }
+  .right{
+	  font-size: 12px;
+	  text-align:left;
+  }
+  .clear{clear:both}
+  .desc{
+	  color: #3d6bad;
+ 		font-size: 14px;
+		font-style:oblique;
+    font-weight: bold;  
+    padding-top: 8px;
+		padding-bottom:8px;
+		padding-left:100px;
+  }
+  .desc-small{
+	  color: #3d6bad;
+ 		font-size: 12px;
+		font-style:oblique;
+    font-weight: bold;  
+  }
+  .desc-black{
+	  margin-top:20px;
+	 margin-bottom: 20px;
+	  color: #00000;
+ 		font-size: 14px;
+		font-style:oblique;
+    font-weight: bold; 
+	text-align: left; 
+  }
+  #pagina{
+	  
+	  text-align: center;
+	  background-image: url(./immagini/sfondo.png);
+	  background-position:bottom;
+	  background-repeat: no-repeat;
+	  padding-left: 50px;
+	  padding-right:20px;
+   }
+#sito{
+  margin: 50 auto 0 auto;
+  width: 900px;
+	border: 2px solid #3d6bad;
+	background: #FFFFFF;
+  
+}
+  
+  #top{
+    background-image: url(./immagini/logo.png);
+	  background-repeat: no-repeat;
+	}
+	#fiore{
+		height:137px;
+    background-image: url(./immagini/fiore.png);
+	background-position:bottom right;
+	  background-repeat: no-repeat;
+	}
+	
+	
+  #tabella{ padding-bottom: 260px; }
+  .pulsante{
+    width:120px;
+	  height:74px;
+    color: #3d6bad;
+    font-size: 15px;
+    font-weight: bold;  
+    vertical-align: center;
+    padding-top: 30px;
+    border: 0px;
+  }
+  .pulsante:hover{  color: #ffffff;}
+  
+  
+  .invia{
+	  	background-image:url(./immagini/uccello-i.png);
+      background-repeat:no-repeat;
+      cursor: pointer;
+	cursor: hand;
+  }
+  .resetta{
+	  	background-image:url(./immagini/uccello-a.png);
+	 background-repeat:no-repeat;
+    cursor: pointer;
+	cursor: hand;
+  }
+  
+  .invia:hover{
+	  	background-image:url(./immagini/uccello-i-h.png);
+	 background-repeat:no-repeat;
+  }
+  .resetta:hover{
+	  	background-image:url(./immagini/uccello-a-h.png);
+	 background-repeat:no-repeat;
+  }
+  
+  
+  #top{
+    
+    margin-top: 30px;
+    margin-bottom:30px;
+    height: 59px;
+    width: 500px
+    background-image:url(./immagini/logo.png);
+	 background-repeat:no-repeat;
+   
+  }
+  
+  #footer{
+	  
+	  text-align:right;
+	  font-size:14px;
+	  
+	  color: #3d6bad;
+	  font-weight:bold;
+	  margin: 15 auto 0 auto;
+  width: 900px;
+	  
+  }
+  .footerLink{
+  	text-decoration: none;
+	color:#fdf4a5;
+	
+  }
+  .footerLink:hover{
+  	color:#924633;
+  }
+  
+  
+</STYLE>
+<!--[if IE]>
+  <style type="text/css">
+  #pagina{width: 900px}
+  </style>
+<![endif]-->
+
+</head>
+<body>
+  <div id='sito'>
+    <div id='pagina'>
+      
+      <div id='fiore'>
+        <div id='top'>   </div>
+        <div class='desc-black'>Scheda di iscrizione <br> &nbsp;&nbsp; - al fine del buon fine dell'iscrizione &egrave; necessario compilare tutti i campi richiesti - <br></div>
+      </div>
+      
+      <div id='tabella'>
+        <!-- <form name="contatto" method="post" action="https://www.totalconnect.it/iscritti/inserimento_utente_milano.php" onSubmit="return(CkForm(this));" enctype="multipart/form-data"> -->
+        <form name="contatto" method="post" action="https://www.totalconnect.it/iscritti/inserimento_utente_milano.php" enctype="multipart/form-data">
+          <table width='100%'>
+            <tr>
+              <td class='desc' colspan='4'>Il genitore ( o l'esercente la potestà familiare)</td>
+            </tr>
+            <tr>
+              <td width="25%" class='left'>Cognome&nbsp; </td>
+              <td width="17%" class='right' ><input type="text" name="VAR_cognome" value="" size="23"></td>
+              <td width="16%" class='left'>Nome&nbsp; </td>
+              <td width="42%" class='right' ><input type="text" name="VAR_nome" value="" size="23"></td>
+            </tr>
+            <tr>
+              <td class='left'>Nato a&nbsp; </td>
+              <td class='right' ><input type="text" name="VAR_campo_1" value="" size="23"></td>
+              <td class='left'>Il&nbsp; </td>
+              <td class='right' ><select name="VAR_g_n" >
+                <option value="0" >--</option>
+                <option value="01" >1</option>
+                <option value="02" >2</option>
+                <option value="03" >3</option>
+                <option value="04" >4</option>
+                <option value="05" >5</option>
+                <option value="06" >6</option>
+                <option value="07" >7</option>
+                <option value="08" >8</option>
+                <option value="09" >9</option>
+                <option value="10" >10</option>
+                <option value="11" >11</option>
+                <option value="12" >12</option>
+                <option value="13" >13</option>
+                <option value="14" >14</option>
+                <option value="15" >15</option>
+                <option value="16" >16</option>
+                <option value="17" >17</option>
+                <option value="18" >18</option>
+                <option value="19" >19</option>
+                <option value="20" >20</option>
+                <option value="21" >21</option>
+                <option value="22" >22</option>
+                <option value="23" >23</option>
+                <option value="24" >24</option>
+                <option value="25" >25</option>
+                <option value="26" >26</option>
+                <option value="27" >27</option>
+                <option value="28" >28</option>
+                <option value="29" >29</option>
+                <option value="30" >30</option>
+                <option value="31" >31</option>
+              </select>
+                <select name="VAR_m_n" >
+                  <option value="0" >--</option>
+                  <option value="01" >Gen</option>
+                  <option value="02" >Feb</option>
+                  <option value="03" >Mar</option>
+                  <option value="04" >Apr</option>
+                  <option value="05" >Mag</option>
+                  <option value="06" >Giu</option>
+                  <option value="07" >Lug</option>
+                  <option value="08" >Ago</option>
+                  <option value="09" >Set</option>
+                  <option value="10" >Ott</option>
+                  <option value="11" >Nov</option>
+                  <option value="12" >Dic</option>
+                </select>
+                <select name="VAR_a_n" >
+                  <option value="0">--</option>
+                  <option value="1905" >1905</option>
+                  <option value="1906" >1906</option>
+                  <option value="1907" >1907</option>
+                  <option value="1908" >1908</option>
+                  <option value="1909" >1909</option>
+                  <option value="1910" >1910</option>
+                  <option value="1911" >1911</option>
+                  <option value="1912" >1912</option>
+                  <option value="1913" >1913</option>
+                  <option value="1914" >1914</option>
+                  <option value="1915" >1915</option>
+                  <option value="1916" >1916</option>
+                  <option value="1917" >1917</option>
+                  <option value="1918" >1918</option>
+                  <option value="1919" >1919</option>
+                  <option value="1920" >1920</option>
+                  <option value="1921" >1921</option>
+                  <option value="1922" >1922</option>
+                  <option value="1923" >1923</option>
+                  <option value="1924" >1924</option>
+                  <option value="1925" >1925</option>
+                  <option value="1926" >1926</option>
+                  <option value="1927" >1927</option>
+                  <option value="1928" >1928</option>
+                  <option value="1929" >1929</option>
+                  <option value="1930" >1930</option>
+                  <option value="1931" >1931</option>
+                  <option value="1932" >1932</option>
+                  <option value="1933" >1933</option>
+                  <option value="1934" >1934</option>
+                  <option value="1935" >1935</option>
+                  <option value="1936" >1936</option>
+                  <option value="1937" >1937</option>
+                  <option value="1938" >1938</option>
+                  <option value="1939" >1939</option>
+                  <option value="1940" >1940</option>
+                  <option value="1941" >1941</option>
+                  <option value="1942" >1942</option>
+                  <option value="1943" >1943</option>
+                  <option value="1944" >1944</option>
+                  <option value="1945" >1945</option>
+                  <option value="1946" >1946</option>
+                  <option value="1947" >1947</option>
+                  <option value="1948" >1948</option>
+                  <option value="1949" >1949</option>
+                  <option value="1950" >1950</option>
+                  <option value="1951" >1951</option>
+                  <option value="1952" >1952</option>
+                  <option value="1953" >1953</option>
+                  <option value="1954" >1954</option>
+                  <option value="1955" >1955</option>
+                  <option value="1956" >1956</option>
+                  <option value="1957" >1957</option>
+                  <option value="1958" >1958</option>
+                  <option value="1959" >1959</option>
+                  <option value="1960" >1960</option>
+                  <option value="1961" >1961</option>
+                  <option value="1962" >1962</option>
+                  <option value="1963" >1963</option>
+                  <option value="1964" >1964</option>
+                  <option value="1965" >1965</option>
+                  <option value="1966" >1966</option>
+                  <option value="1967" >1967</option>
+                  <option value="1968" >1968</option>
+                  <option value="1969" >1969</option>
+                  <option value="1970" >1970</option>
+                  <option value="1971" >1971</option>
+                  <option value="1972" >1972</option>
+                  <option value="1973" >1973</option>
+                  <option value="1974" >1974</option>
+                  <option value="1975" >1975</option>
+                  <option value="1976" >1976</option>
+                  <option value="1977" >1977</option>
+                  <option value="1978" >1978</option>
+                  <option value="1979" >1979</option>
+                  <option value="1980" >1980</option>
+                  <option value="1981" >1981</option>
+                  <option value="1982" >1982</option>
+                  <option value="1983" >1983</option>
+                  <option value="1984" >1984</option>
+                  <option value="1985" >1985</option>
+                  <option value="1986" >1986</option>
+                  <option value="1987" >1987</option>
+                  <option value="1988" >1988</option>
+                  <option value="1989" >1989</option>
+                  <option value="1990" >1990</option>
+                  <option value="1991" >1991</option>
+                  <option value="1992" >1992</option>
+                  <option value="1993" >1993</option>
+                  <option value="1994" >1994</option>
+                  <option value="1995" >1995</option>
+                  <option value="1996" >1996</option>
+                  <option value="1997" >1997</option>
+                  <option value="1998" >1998</option>
+                  <option value="1999" >1999</option>
+                  <option value="2000" >2000</option>
+                  <option value="2001" >2001</option>
+                  <option value="2002" >2002</option>
+                  <option value="2003" >2003</option>
+                  <option value="2004" >2004</option>
+                  <option value="2005" >2005</option>
+                  <option value="2006" >2006</option>
+                  <option value="2007" >2007</option>
+                  <option value="2008" >2008</option>
+                  <option value="2009" >2009</option>
+                  <option value="2010" >2010</option>
+                  <option value="2011" >2011</option>
+                </select></td>
+            </tr>
+            <tr>
+              <td class='left'>Residente a&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_citta" value="" size="23"></td>
+              <td class='left'>In Via&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_indirizzo" value="" size="23">
+                &nbsp;N&deg;&nbsp;
+                <input type="text" name="VAR_numero_1" value="" size="4"></td>
+            </tr>
+            <tr>
+              <td class='left'>Cod. Fiscale&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_iva" value="" size="23"></td>
+              <td class='left'>Cap&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_cap" value="" size="5"></td>
+            </tr>
+            <tr></tr>
+            <tr>
+              <td class='left'>E-mail&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_email" value="" size="23"></td>
+              <td class='left'>Cellulare&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_cellulare" value="" size="23"></td>
+            </tr>
+            <tr>
+              <td class='desc' colspan='4'> Documenti (in corso di validit&agrave;) </td>
+            </tr>
+            <tr>
+              <td class='left'>Passaporto&nbsp;</td>
+              <td class='right' colspan='3'><input type="radio" name="VAR_select_1" value="3214" size="5" checked='checked'>
+                Patente&nbsp;
+                <input type="radio" name="VAR_select_1" value="3227" size="5">
+                &nbsp;C.i&nbsp;
+                <input type="radio" name="VAR_select_3" value="3213" size="5"></td>
+            </tr>
+            <tr>
+              <td class='left'>Numero&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_2" value="" size="23"></td>
+              <td class='left'>Rilasicato da&nbsp;</td>
+              <td  class='right'><input type="text" name="VAR_campo_3" value="" size="23">
+                &nbsp;Il&nbsp;
+                <select name="VAR_g_1" >
+                  <option value="0" >--</option>
+                  <option value="01" >1</option>
+                  <option value="02" >2</option>
+                  <option value="03" >3</option>
+                  <option value="04" >4</option>
+                  <option value="05" >5</option>
+                  <option value="06" >6</option>
+                  <option value="07" >7</option>
+                  <option value="08" >8</option>
+                  <option value="09" >9</option>
+                  <option value="10" >10</option>
+                  <option value="11" >11</option>
+                  <option value="12" >12</option>
+                  <option value="13" >13</option>
+                  <option value="14" >14</option>
+                  <option value="15" >15</option>
+                  <option value="16" >16</option>
+                  <option value="17" >17</option>
+                  <option value="18" >18</option>
+                  <option value="19" >19</option>
+                  <option value="20" >20</option>
+                  <option value="21" >21</option>
+                  <option value="22" >22</option>
+                  <option value="23" >23</option>
+                  <option value="24" >24</option>
+                  <option value="25" >25</option>
+                  <option value="26" >26</option>
+                  <option value="27" >27</option>
+                  <option value="28" >28</option>
+                  <option value="29" >29</option>
+                  <option value="30" >30</option>
+                  <option value="31" >31</option>
+                </select>
+                <select name="VAR_m_1" >
+                  <option value="0" >--</option>
+                  <option value="01" >Gen</option>
+                  <option value="02" >Feb</option>
+                  <option value="03" >Mar</option>
+                  <option value="04" >Apr</option>
+                  <option value="05" >Mag</option>
+                  <option value="06" >Giu</option>
+                  <option value="07" >Lug</option>
+                  <option value="08" >Ago</option>
+                  <option value="09" >Set</option>
+                  <option value="10" >Ott</option>
+                  <option value="11" >Nov</option>
+                  <option value="12" >Dic</option>
+                </select>
+                <select name="VAR_a_1" >
+                  <option value="0">--</option>
+                  <option value="1905" >1905</option>
+                  <option value="1906" >1906</option>
+                  <option value="1907" >1907</option>
+                  <option value="1908" >1908</option>
+                  <option value="1909" >1909</option>
+                  <option value="1910" >1910</option>
+                  <option value="1911" >1911</option>
+                  <option value="1912" >1912</option>
+                  <option value="1913" >1913</option>
+                  <option value="1914" >1914</option>
+                  <option value="1915" >1915</option>
+                  <option value="1916" >1916</option>
+                  <option value="1917" >1917</option>
+                  <option value="1918" >1918</option>
+                  <option value="1919" >1919</option>
+                  <option value="1920" >1920</option>
+                  <option value="1921" >1921</option>
+                  <option value="1922" >1922</option>
+                  <option value="1923" >1923</option>
+                  <option value="1924" >1924</option>
+                  <option value="1925" >1925</option>
+                  <option value="1926" >1926</option>
+                  <option value="1927" >1927</option>
+                  <option value="1928" >1928</option>
+                  <option value="1929" >1929</option>
+                  <option value="1930" >1930</option>
+                  <option value="1931" >1931</option>
+                  <option value="1932" >1932</option>
+                  <option value="1933" >1933</option>
+                  <option value="1934" >1934</option>
+                  <option value="1935" >1935</option>
+                  <option value="1936" >1936</option>
+                  <option value="1937" >1937</option>
+                  <option value="1938" >1938</option>
+                  <option value="1939" >1939</option>
+                  <option value="1940" >1940</option>
+                  <option value="1941" >1941</option>
+                  <option value="1942" >1942</option>
+                  <option value="1943" >1943</option>
+                  <option value="1944" >1944</option>
+                  <option value="1945" >1945</option>
+                  <option value="1946" >1946</option>
+                  <option value="1947" >1947</option>
+                  <option value="1948" >1948</option>
+                  <option value="1949" >1949</option>
+                  <option value="1950" >1950</option>
+                  <option value="1951" >1951</option>
+                  <option value="1952" >1952</option>
+                  <option value="1953" >1953</option>
+                  <option value="1954" >1954</option>
+                  <option value="1955" >1955</option>
+                  <option value="1956" >1956</option>
+                  <option value="1957" >1957</option>
+                  <option value="1958" >1958</option>
+                  <option value="1959" >1959</option>
+                  <option value="1960" >1960</option>
+                  <option value="1961" >1961</option>
+                  <option value="1962" >1962</option>
+                  <option value="1963" >1963</option>
+                  <option value="1964" >1964</option>
+                  <option value="1965" >1965</option>
+                  <option value="1966" >1966</option>
+                  <option value="1967" >1967</option>
+                  <option value="1968" >1968</option>
+                  <option value="1969" >1969</option>
+                  <option value="1970" >1970</option>
+                  <option value="1971" >1971</option>
+                  <option value="1972" >1972</option>
+                  <option value="1973" >1973</option>
+                  <option value="1974" >1974</option>
+                  <option value="1975" >1975</option>
+                  <option value="1976" >1976</option>
+                  <option value="1977" >1977</option>
+                  <option value="1978" >1978</option>
+                  <option value="1979" >1979</option>
+                  <option value="1980" >1980</option>
+                  <option value="1981" >1981</option>
+                  <option value="1982" >1982</option>
+                  <option value="1983" >1983</option>
+                  <option value="1984" >1984</option>
+                  <option value="1985" >1985</option>
+                  <option value="1986" >1986</option>
+                  <option value="1987" >1987</option>
+                  <option value="1988" >1988</option>
+                  <option value="1989" >1989</option>
+                  <option value="1990" >1990</option>
+                  <option value="1991" >1991</option>
+                  <option value="1992" >1992</option>
+                  <option value="1993" >1993</option>
+                  <option value="1994" >1994</option>
+                  <option value="1995" >1995</option>
+                  <option value="1996" >1996</option>
+                  <option value="1997" >1997</option>
+                  <option value="1998" >1998</option>
+                  <option value="1999" >1999</option>
+                  <option value="2000" >2000</option>
+                  <option value="2001" >2001</option>
+                  <option value="2002" >2002</option>
+                  <option value="2003" >2003</option>
+                  <option value="2004" >2004</option>
+                  <option value="2005" >2005</option>
+                  <option value="2006" >2006</option>
+                  <option value="2007" >2007</option>
+                  <option value="2008" >2008</option>
+                  <option value="2009" >2009</option>
+                  <option value="2010" >2010</option>
+                  <option value="2011" >2011</option>
+                </select></td>
+            </tr>
+            <tr>
+              <td class='desc' colspan='4'> Chiede e autorizza per il/la figlio/a</td>
+            </tr>
+            <tr>
+              <td class='left'>Cognome&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_4" value="" size="23"></td>
+              <td class='left'>Nome&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_5" value="" size="23"></td>
+            </tr>
+            <tr>
+              <td class='left'>Nato a </td>
+              <td class='right' ><input type="text" name="VAR_campo_6" value="" size="23"></td>
+              <td class='left'>Il&nbsp;</td>
+              <td class='right' ><select name="VAR_g_2" >
+                <option value="0" >--</option>
+                <option value="01" >1</option>
+                <option value="02" >2</option>
+                <option value="03" >3</option>
+                <option value="04" >4</option>
+                <option value="05" >5</option>
+                <option value="06" >6</option>
+                <option value="07" >7</option>
+                <option value="08" >8</option>
+                <option value="09" >9</option>
+                <option value="10" >10</option>
+                <option value="11" >11</option>
+                <option value="12" >12</option>
+                <option value="13" >13</option>
+                <option value="14" >14</option>
+                <option value="15" >15</option>
+                <option value="16" >16</option>
+                <option value="17" >17</option>
+                <option value="18" >18</option>
+                <option value="19" >19</option>
+                <option value="20" >20</option>
+                <option value="21" >21</option>
+                <option value="22" >22</option>
+                <option value="23" >23</option>
+                <option value="24" >24</option>
+                <option value="25" >25</option>
+                <option value="26" >26</option>
+                <option value="27" >27</option>
+                <option value="28" >28</option>
+                <option value="29" >29</option>
+                <option value="30" >30</option>
+                <option value="31" >31</option>
+              </select>
+                <select name="VAR_m_2" >
+                  <option value="0" >--</option>
+                  <option value="01" >Gen</option>
+                  <option value="02" >Feb</option>
+                  <option value="03" >Mar</option>
+                  <option value="04" >Apr</option>
+                  <option value="05" >Mag</option>
+                  <option value="06" >Giu</option>
+                  <option value="07" >Lug</option>
+                  <option value="08" >Ago</option>
+                  <option value="09" >Set</option>
+                  <option value="10" >Ott</option>
+                  <option value="11" >Nov</option>
+                  <option value="12" >Dic</option>
+                </select>
+                <select name="VAR_a_2" >
+                  <option value="0">--</option>
+                  <option value="1990" >1990</option>
+                  <option value="1991" >1991</option>
+                  <option value="1992" >1992</option>
+                  <option value="1993" >1993</option>
+                  <option value="1994" >1994</option>
+                  <option value="1995" >1995</option>
+                  <option value="1996" >1996</option>
+                  <option value="1997" >1997</option>
+                  <option value="1998" >1998</option>
+                  <option value="1999" >1999</option>
+                  <option value="2000" >2000</option>
+                  <option value="2001" >2001</option>
+                  <option value="2002" >2002</option>
+                  <option value="2003" >2003</option>
+                  <option value="2004" >2004</option>
+                  <option value="2005" >2005</option>
+                  <option value="2006" >2006</option>
+                  <option value="2007" >2007</option>
+                  <option value="2008" >2008</option>
+                  <option value="2009" >2009</option>
+                  <option value="2010" >2010</option>
+                  <option value="2011" >2011</option>
+                </select></td>
+            </tr>
+            <tr>
+              <td class='left'>Tessera sanitaria&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_7" value="" size="23"></td>
+              <td class='left'>Codice Fiscale&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_8" value="" size="23"></td>
+            </tr>
+            <tr>
+              <td class='left'>Scuola primaria di via&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_9" value="" size="23"></td>
+              <td class='left'>Classe&nbsp;</td>
+              <td class='right' ><input type="text" name="VAR_campo_10" value="" size="10">
+                &nbsp;Sezione&nbsp;
+                <input type="text" name="VAR_numero_2" value="" size="2"></td>
+            </tr>
+            <tr>
+              <td class='left'>Utente Milano Ristorazione&nbsp;</td>
+              <td class='right' ><select name="VAR_select_4"  >
+                <option value="3220" >No</option>
+                <option value="3219" >Si</option>
+              </select></td>
+              <td class='left'>Dieta Sanitaria&nbsp;</td>
+              <td class='right' ><select name="VAR_select_5"  >
+                <option value="3222" >No</option>
+                <option value="3211" >Si</option>
+              </select>
+                Dieta Etico Religiosa&nbsp;
+                <select name="VAR_select_6"  >
+                  <option value="3224" >No</option>
+                  <option value="3213" >Si</option>
+                </select></td>
+            </tr>
+            <tr>
+              <td class='desc' colspan='4'>ISCRIZIONE ALL'INIZIATIVA IN VACANZA DALLO SMOG </td>
+            </tr>
+            <tr>
+              <td class='left desc-small'>Presso la casa di vacanza di&nbsp;</td>
+              <td class='right '><select name="VAR_casa_vacanza" onChange='javascript: setIdLista();' id="VAR_casa_vacanza" >
+                <option value=0 > -- -- -- -- </option>
+                <option value="1">GHIFFA</option>
+                <option value="2" >MALCENISE</option>
+                <option value="3" >PIETRA LIGURE</option>
+                <option value="4" >VACCIAGO</option>
+                <option value="5" >ZAMBLA ALTA</option>
+              </select></td>
+              <td class='left desc-small' >Nel fine settimana&nbsp;</td>
+              <td class='right ' ><select name="VAR_data_vacanza" onChange='javascript: setIdLista();' id="VAR_data_vacanza" >
+                <option value=0 > -- -- -- -- </option>
+                <option value="1">19/20 Marzo 2011</option>
+                <option value="2">26/27 Marzo 2011</option>
+                <option value="3">2/3 Aprile 2011</option>
+                <option value="4">9/10 Aprile 2011</option>
+                <option value="5">16/17 Aprile 2011</option>
+                <option value="6">30 Aprile 1 Maggio2011</option>
+              </select></td>
+            </tr>
+            <tr>
+              <td class='desc-black' colspan='4' style='padding-left:100px;padding-top: 15px; padding-bottom: 15px;font-size:13px'> Impegnandosi a versare al Comune di Milano il contributo per la   partecipazione di &euro; 21,00 a seguito di accettazione della richiesta&nbsp; da   versamento </td>
+            </tr>
+            <tr>
+              <td class='left' style="vertical-align:top">Legge Privacy&nbsp;</td>
+              <td class='right' colspan='3'><textarea name="textarea" cols="120" rows="6" style="text-align:left">Informativa ai sensi dell'art .13 D.lgs 196/2003 all'interessato per il trattamento dei dati personali
+
+Gentile Destinatario,
+il Comune di Milano, in qualità di Titolare del trattamento dei dati personali ai sensi dell'art .13 del D.lgs n.196 del 30.06.03 (Codice in materia di protezione dei dati personali), La informa di quanto segue.
+I dati personali, nell'ambito del Servizio Estate Vacanza del Comune di Milano, sono trattati esclusivamente per le finalità strumentali e connesse all'erogazione del Servizio, con particolare riguardo, nel caso di specie, alla garanzia di fornitura di diete speciali, volte ad assicurare la compatibilità    degli alimenti somministrati con lo stato dei singoli ospiti.
+I dati sono trattati con modalità cartacee e con strumenti elettronici solo per le finalità descritte.
+Il loro conferimento è obbligatorio ed il rifiuto a fornirli comporta l'impedimento di dar corso all'iscrizione, nonché a tutti gli altri adempimenti conseguenti. 
+I dati sono conservati garantendone la sicurezza e la riservatezza con adeguate misure di protezione, secondo quanto disposto dagli Artt. da 31 a 36 del D.Lgs. 196/03, al fine di ridurre i rischi di distruzione o perdita, anche accidentale, dei dati, di accesso non autorizzato o di trattamento non consentito o non conforme alle finalità della raccolta.
+I dati personali, anche sensibili, possono essere comunicati ad altri soggetti pubblici e privati e possono essere diffusi, con esclusione dei dati idonei a rivelare lo stato di salute, quando tali trattamenti siano previsti da disposizioni di legge o di regolamento. I dati di carattere sanitario sono trattati limitatamente alle operazioni indispensabili per la tutela dell'incolumità fisica del minore.  
+I Responsabili del trattamento dei dati sono: 
+1.il Direttore del Settore Servizi per Minori e Giovani dott. Patrizio Mercadante (per il servizio reso direttamente dal Comune di Milano)
+2.Milano Ristorazione S.p.A nella persona del suo legale rappresentante dr. Marco Predolin, con sede a Milano in via Quaranta n. 41 (per gli adempimenti connessi all'approvvigionamento delle materie prime oggetto dell'attività specifica, produzione dei pasti e adempimenti obbligatori previsti dalla legge connessi alla gestione di tutto il servizio oggetto dell'attività dell'azienda)
+3.D.O.C. S.C.S.  (società affidataria di servizi) nella persona del suo  legale rappresentante dr.ssa Maria Teresa Rossi, con sede a Torino in via Assetta n. 16/b ( per gli adempimenti connessi alla richiesta, al controllo, alla somministrazione dei pasti e adempimenti obbligatori previsti dalla legge connessi alla gestione di tutto il servizio oggetto dell'attività dell'azienda)
+Gli incaricati del trattamento sono i dipendenti del Comune di Milano, addetti al Settore Servizi per Minori e Giovani (per la comunicazione ai destinatari finali ai fini della realizzazione del servizio) e i dipendenti / collaboratori dei soggetti di cui ai precedenti punti 2 e 3.
+In ogni momento, quale interessato, Lei può esercitare i Suoi diritti nei confronti del titolare del trattamento, ai sensi dell'Art. 7 del D.lgs n.196 del 30.06.03, che per Sua comodità di seguito riproduciamo integralmente.
+Art. 7. Diritto di accesso ai dati personali ed altri diritti
+1. L'interessato ha diritto di ottenere la conferma dell'esistenza o meno di dati personali che lo riguardano, anche se non ancora registrati, e la loro comunicazione in forma intelligibile.
+2. L'interessato ha diritto di ottenere l'indicazione:
+a) dell'origine dei dati personali;
+b) delle finalità e modalità del trattamento;
+c) della logica applicata in caso di trattamento effettuato con l'ausilio di strumenti elettronici;
+d) degli estremi identificativi del titolare, dei responsabili e del rappresentante designato ai sensi dell'articolo 5, comma 2;
+e) dei soggetti o delle categorie di soggetti ai quali i dati personali possono essere comunicati o che possono venirne a conoscenza in qualità di rappresentante designato nel territorio dello Stato, di responsabili o incaricati.
+3. L'interessato ha diritto di ottenere:
+a) l'aggiornamento, la rettificazione ovvero, quando vi ha interesse, l'integrazione dei dati;
+b) la cancellazione, la trasformazione in forma anonima o il blocco dei dati trattati in violazione di legge, compresi quelli di cui non è necessaria la conservazione in relazione agli scopi per i quali i dati sono stati raccolti o successivamente trattati;
+c) l'attestazione che le operazioni di cui alle lettere a) e b) sono state portate a conoscenza, anche per quanto riguarda il loro contenuto, di coloro ai quali i dati sono stati comunicati o diffusi, eccettuato il caso in cui tale adempimento si rivela impossibile o comporta un impiego di mezzi manifestamente sproporzionato rispetto al diritto tutelato.
+4. L'interessato ha diritto di opporsi, in tutto o in parte:
+a) per motivi legittimi al trattamento dei dati personali che lo riguardano, ancorchè pertinenti allo scopo della raccolta;
+b) al trattamento di dati personali che lo riguardano a fini di invio di materiale pubblicitario o di vendita diretta o per il compimento di ricerche di mercato o di comunicazione commerciale.
+            </textarea></td>
+            </tr>
+            <tr>
+              <td class='left'><input type ='checkbox' name ='VAR_select_7' value='3225' checked='checked' id='consenso' ></td>
+              <td class='right' colspan='3' ><b>ACCONSENTO</b> al trattamento dei dati&nbsp;</td>
+            </tr>
+            <tr>
+              <td class='left'><input type ='radio' name ='VAR_select_9' value='3230'></td>
+              <td class='right' colspan='3' ><b>ACCONSENTO</b> ad effettuare fotografia e riprese video - di pertinenza esclusiva dell'organizzazione - per documentare le attività didattihce dell'iniziativa, anche in spazi promozionali. </td>
+            </tr>
+            <tr>
+              <td class='left'><input type ='radio' name ='VAR_select_9' value='3231' checked='checked'   ></td>
+              <td class='right' colspan='3' ><b>NON ACCONSENTO</b> ad effettuare fotografia e riprese video - di pertinenza esclusiva dell'organizzazione - per documentare le attività didattihce dell'iniziativa, anche in spazi promozionali. </td>
+            </tr>
+            <tr>
+              <td ></td>
+              <td class='right' colspan='3' style='padding-top:20px'><input type="hidden" name="action" value="adduser">
+                <input type="hidden" name="id_user" value="25633">
+                <input type="hidden" name="id_lista" value="" id='id_lista'>
+                <input type="reset" value="Azzera" class='pulsante resetta'>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input class='pulsante invia' type="submit" value="Invia"></td>
+            </tr>
+          </table>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div id='footer'>In vacanza dallo smog è un iniziativa del <a href="http://www.comune.milano.it/portale/wps/portal/CDMHome" class='footerLink'>COMUNE DI MILANO</a></div>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<?php
+
+class QuestionnaireSectionController extends Controller
+{
+    public $layout = 'main'; // usa layout del modulo se presente
+
+    public function filters()
+    {
+        return array(
+            'accessControl',
+            'postOnly + delete',
+        );
+    }
+
+    public function accessRules()
+    {
+        return array(
+            array('allow', // allow authenticated user to perform 'create' and 'update' actions
+                'actions' => array('index', 'view', 'create', 'update', 'delete', 'createFull', 'editFull', 'getConditionValues'),
+                'expression'=>'Yii::app()->user->getState("group") == "ADMIN"',
+            ),
+            array('deny', // deny all users
+                'users' => array('*'),
+            ),
+        );
+    }
+
+    public function actionIndex()
+    {
+        $dataProvider = new CActiveDataProvider('QuestionnaireSection');
+        $this->render('index', array(
+            'dataProvider' => $dataProvider,
+        ));
+    }
+
+    public function actionView($id)
+    {
+        $model = $this->loadModel($id);
+
+        // Breadcrumbs dinamici
+        $this->breadcrumbs = array(
+            'Questionari' => array('questionnaire/index'),
+            $model->version->questionnaire->title => array('questionnaire/view', 'id' => $model->version->questionnaire_id),
+            'Versioni' => array('questionnaireVersion/index', 'questionnaire_id' => $model->version->questionnaire_id),
+            'Versione ' . $model->version->version_number => array('questionnaireVersion/view', 'id' => $model->version_id),
+            'Sezioni' => array('questionnaireSection/index', 'version_id' => $model->version_id),
+            $model->title,
+        );
+
+        $this->render('view', array(
+            'model' => $model,
+        ));
+    }
+
+    public function actionCreate($version_id)
+    {
+        $model = new QuestionnaireSection;
+        $model->version_id = $version_id;
+
+        if (isset($_POST['QuestionnaireSection'])) {
+            $model->attributes = $_POST['QuestionnaireSection'];
+            if ($model->save()) {
+                Yii::app()->user->setFlash('success', 'Sezione creata con successo.');
+                $this->redirect(array('questionnaireVersion/view', 'id'=>$version_id));
+            }
+        }
+
+        $this->render('create', array('model' => $model));
+    }
+
+    public function actionUpdate($id)
+    {
+        $model = $this->loadModel($id);
+
+        if (isset($_POST['QuestionnaireSection'])) {
+            $model->attributes = $_POST['QuestionnaireSection'];
+            if ($model->save()) {
+                Yii::app()->user->setFlash('success', 'Sezione aggiornata.');
+                $this->redirect(array('questionnaireVersion/view', 'id'=>$model->version_id));
+            }
+        }
+
+        $this->render('update', array('model' => $model));
+    }
+
+    public function actionDelete($id)
+    {
+        if (Yii::app()->request->isPostRequest) {
+            $model = $this->loadModel($id);
+            $version_id = $model->version_id;
+            $model->delete();
+
+            Yii::app()->user->setFlash('success', 'Sezione eliminata.');
+            $this->redirect(array('questionnaireVersion/view', 'id'=>$version_id));
+        } else {
+            throw new CHttpException(400, 'Richiesta non valida.');
+        }
+    }
+
+    public function actionCreateFull($version_id)
+    {
+        if (isset($_POST['sections'])) {
+            $transaction = Yii::app()->db->beginTransaction();
+            try {
+                foreach ($_POST['sections'] as $sectionData) {
+                    $section = new QuestionnaireSection;
+                    $section->attributes = $sectionData; // Assicurati che i campi siano corretti
+                    $section->setAttribute('version_id', $version_id);
+
+                    if (!$section->validate() || !$section->save()) {
+                        echo CVarDumper::dumpAsString($section->getErrors());exit;
+                        throw new Exception('Errore salvataggio sezione: '.$section->title);
+                    }
+
+                    if (isset($sectionData['questions'])) {
+                        foreach ($sectionData['questions'] as $questionData) {
+                            $question = new Question;
+                            $question->section_id = $section->id;
+                            $question->text = $questionData['text'];
+                            $question->type = $questionData['type'];
+                            $question->order = $questionData['order'];
+                            
+                            // Gestione campi condizionali per nuove domande in createFull
+                            if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                $question->condition_question_id = null;
+                                $question->condition_operator = null;
+                                $question->condition_value = null;
+                            } else {
+                                $question->condition_question_id = $questionData['condition_question_id'];
+                                $question->condition_operator = $questionData['condition_operator'];
+                                $question->condition_value = $questionData['condition_value'];
+                            }
+                            
+                            if (!$question->save())
+                                throw new Exception('Errore salvataggio domanda: '.$question->text);
+                            // Gestione opzioni custom
+                            if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
+                                // Debug temporaneo
+                                error_log("DEBUG: Salvataggio opzioni custom per domanda ID " . $question->id);
+                                error_log("DEBUG: custom_options ricevuto: " . $questionData['custom_options']);
+                                
+                                $options = preg_split('/\r?\n/', trim($questionData['custom_options']));
+                                $options = array_unique(array_filter(array_map('trim', $options), function($v){ return $v !== ''; }));
+                                sort($options, SORT_NATURAL);
+                                
+                                error_log("DEBUG: Opzioni processate: " . print_r($options, true));
+                                
+                                $order = 1;
+                                foreach ($options as $opt) {
+                                    $opt = trim($opt);
+                                    if ($opt === '') continue;
+                                    $option = new QuestionOption();
+                                    $option->question_id = $question->id;
+                                    $option->option_text = $opt;
+                                    $option->value = $order;
+                                    $option->order = $order;
+                                    if (!$option->save()) {
+                                        error_log("DEBUG: Errore salvataggio opzione: " . print_r($option->getErrors(), true));
+                                    } else {
+                                        error_log("DEBUG: Opzione salvata con successo: " . $opt);
+                                    }
+                                    $order++;
+                                }
+                            } else if ($question->type === 'custom') {
+                                error_log("DEBUG: Domanda custom senza opzioni - ID: " . $question->id . ", custom_options: " . (isset($questionData['custom_options']) ? $questionData['custom_options'] : 'NON SET'));
+                            }
+                        }
+                    }
+                }
+                $transaction->commit();
+                Yii::app()->user->setFlash('success', 'Questionario creato con successo.');
+                $this->redirect(array('questionnaireVersion/view', 'id'=>$version_id));
+
+            } catch (Exception $e) {
+                $transaction->rollback();
+                Yii::app()->user->setFlash('error', 'Errore: '.$e->getMessage());
+            }
+        }
+
+        $this->render('createFull', array('version_id' => $version_id));
+    }
+
+    public function actionEditFull($version_id)
+    {
+        $version = QuestionnaireVersion::model()->findByPk($version_id);
+        if (!$version) throw new CHttpException(404, 'Versione non trovata.');
+
+        $sections = QuestionnaireSection::model()->with('questions')->findAll(array(
+            'condition'=>'version_id=:version_id',
+            'params'=>array(':version_id'=>$version_id),
+            'order'=>'t.order ASC, questions.order ASC'
+        ));
+
+        $hasResponses = $version->hasResponses();
+
+        if (isset($_POST['sections']) || isset($_POST['new_sections']) || isset($_POST['new_questions']) || isset($_POST['delete_questions'])) {
+            $transaction = Yii::app()->db->beginTransaction();
+            try {
+                if (isset($_POST['sections'])) {
+                    foreach ($_POST['sections'] as $section_id => $sectionData) {
+                        $section = QuestionnaireSection::model()->findByPk($section_id);
+                        if (!$section) continue;
+
+                        $section->attributes = $sectionData;
+                        if (!$section->save())
+                            throw new Exception('Errore salvataggio sezione '.$section_id.': '.CJSON::encode($section->getErrors()));
+
+                        // Update domande esistenti
+                        if (isset($sectionData['questions'])) {
+                            foreach ($sectionData['questions'] as $question_id => $questionData) {
+                                $question = Question::model()->findByPk($question_id);
+                                if (!$question) continue;
+
+                                $question->attributes = $questionData;
+                                
+                                // Gestione campi condizionali
+                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                    $question->condition_question_id = null;
+                                    $question->condition_operator = null;
+                                    $question->condition_value = null;
+                                }
+                                
+                                if (!$question->save())
+                                    throw new Exception('Errore salvataggio domanda '.$question_id.': '.CJSON::encode($question->getErrors()));
+                                // Gestione opzioni custom
+                                if ($question->type === 'custom') {
+                                    // Debug temporaneo
+                                    error_log("DEBUG: Aggiornamento opzioni custom per domanda ID " . $question->id);
+                                    error_log("DEBUG: custom_options ricevuto: " . (isset($questionData['custom_options']) ? $questionData['custom_options'] : 'NON SET'));
+                                    
+                                    QuestionOption::model()->deleteAllByAttributes(['question_id' => $question->id]);
+                                    if (!empty($questionData['custom_options'])) {
+                                        $options = preg_split('/\r?\n/', trim($questionData['custom_options']));
+                                        $options = array_unique(array_filter(array_map('trim', $options), function($v){ return $v !== ''; }));
+                                        sort($options, SORT_NATURAL);
+                                        
+                                        error_log("DEBUG: Opzioni processate: " . print_r($options, true));
+                                        
+                                        $order = 1;
+                                        foreach ($options as $opt) {
+                                            $opt = trim($opt);
+                                            if ($opt === '') continue;
+                                            $option = new QuestionOption();
+                                            $option->question_id = $question->id;
+                                            $option->option_text = $opt;
+                                            $option->value = $order;
+                                            $option->order = $order;
+                                            if (!$option->save()) {
+                                                error_log("DEBUG: Errore salvataggio opzione: " . print_r($option->getErrors(), true));
+                                            } else {
+                                                error_log("DEBUG: Opzione salvata con successo: " . $opt);
+                                            }
+                                            $order++;
+                                        }
+                                    } else {
+                                        error_log("DEBUG: Domanda custom senza opzioni - ID: " . $question->id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isset($_POST['new_sections'])) {
+                    foreach ($_POST['new_sections'] as $tmpSectionId => $sectionData) {
+                        $section = new QuestionnaireSection;
+                        $section->attributes = $sectionData;
+                        $section->setAttribute('version_id', $version_id);
+                        if (!$section->save())
+                            throw new Exception('Errore salvataggio nuova sezione: '.CJSON::encode($section->getErrors()));
+
+                        // Nuove domande della nuova sezione
+                        if (isset($sectionData['questions'])) {
+                            foreach ($sectionData['questions'] as $questionData) {
+                                $question = new Question;
+                                $question->setAttribute('section_id', $section->id);
+                                $question->attributes = $questionData;
+                                
+                                // Gestione campi condizionali per nuove domande in nuove sezioni
+                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                    $question->condition_question_id = null;
+                                    $question->condition_operator = null;
+                                    $question->condition_value = null;
+                                }
+                                
+                                if (!$question->save())
+                                    throw new Exception('Errore salvataggio domanda: '.CJSON::encode($question->getErrors()));
+                                
+                                // Gestione opzioni custom per nuove domande in nuove sezioni
+                                if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
+                                    // Debug temporaneo
+                                    error_log("DEBUG: Salvataggio opzioni custom per NUOVA domanda in NUOVA sezione ID " . $question->id);
+                                    error_log("DEBUG: custom_options ricevuto: " . $questionData['custom_options']);
+                                    
+                                    $options = preg_split('/\r?\n/', trim($questionData['custom_options']));
+                                    $options = array_unique(array_filter(array_map('trim', $options), function($v){ return $v !== ''; }));
+                                    sort($options, SORT_NATURAL);
+                                    
+                                    error_log("DEBUG: Opzioni processate: " . print_r($options, true));
+                                    
+                                    $order = 1;
+                                    foreach ($options as $opt) {
+                                        $opt = trim($opt);
+                                        if ($opt === '') continue;
+                                        $option = new QuestionOption();
+                                        $option->question_id = $question->id;
+                                        $option->option_text = $opt;
+                                        $option->value = $order;
+                                        $option->order = $order;
+                                        if (!$option->save()) {
+                                            error_log("DEBUG: Errore salvataggio opzione: " . print_r($option->getErrors(), true));
+                                        } else {
+                                            error_log("DEBUG: Opzione salvata con successo: " . $opt);
+                                        }
+                                        $order++;
+                                    }
+                                } else if ($question->type === 'custom') {
+                                    error_log("DEBUG: NUOVA domanda custom in NUOVA sezione senza opzioni - ID: " . $question->id . ", custom_options: " . (isset($questionData['custom_options']) ? $questionData['custom_options'] : 'NON SET'));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isset($_POST['new_questions'])) {
+                    foreach ($_POST['new_questions'] as $section_id => $questions) {
+                        foreach ($questions as $questionData) {
+                            $question = new Question;
+                            $question->setAttribute('section_id', $section_id);
+                            $question->attributes = $questionData;
+                            
+                            // Gestione campi condizionali per nuove domande in sezioni esistenti
+                            if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                $question->condition_question_id = null;
+                                $question->condition_operator = null;
+                                $question->condition_value = null;
+                            }
+                            
+                            if (!$question->save())
+                                throw new Exception('Errore salvataggio nuova domanda: '.CJSON::encode($question->getErrors()));
+                            
+                            // Gestione opzioni custom per nuove domande
+                            if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
+                                // Debug temporaneo
+                                error_log("DEBUG: Salvataggio opzioni custom per NUOVA domanda ID " . $question->id);
+                                error_log("DEBUG: custom_options ricevuto: " . $questionData['custom_options']);
+                                
+                                $options = preg_split('/\r?\n/', trim($questionData['custom_options']));
+                                $options = array_unique(array_filter(array_map('trim', $options), function($v){ return $v !== ''; }));
+                                sort($options, SORT_NATURAL);
+                                
+                                error_log("DEBUG: Opzioni processate: " . print_r($options, true));
+                                
+                                $order = 1;
+                                foreach ($options as $opt) {
+                                    $opt = trim($opt);
+                                    if ($opt === '') continue;
+                                    $option = new QuestionOption();
+                                    $option->question_id = $question->id;
+                                    $option->option_text = $opt;
+                                    $option->value = $order;
+                                    $option->order = $order;
+                                    if (!$option->save()) {
+                                        error_log("DEBUG: Errore salvataggio opzione: " . print_r($option->getErrors(), true));
+                                    } else {
+                                        error_log("DEBUG: Opzione salvata con successo: " . $opt);
+                                    }
+                                    $order++;
+                                }
+                            } else if ($question->type === 'custom') {
+                                error_log("DEBUG: NUOVA domanda custom senza opzioni - ID: " . $question->id . ", custom_options: " . (isset($questionData['custom_options']) ? $questionData['custom_options'] : 'NON SET'));
+                            }
+                        }
+                    }
+                }
+
+                if (!$hasResponses && isset($_POST['delete_questions'])) {
+                    foreach ($_POST['delete_questions'] as $question_id) {
+                        $question = Question::model()->findByPk($question_id);
+                        if ($question) $question->delete();
+                    }
+                } elseif ($hasResponses && isset($_POST['delete_questions'])) {
+                    throw new Exception('Impossibile eliminare domande: la versione ha compilazioni registrate.');
+                }
+
+                $transaction->commit();
+                Yii::app()->user->setFlash('success', 'Modifiche salvate con successo.');
+                $this->redirect(array('questionnaireVersion/view', 'id'=>$version_id));
+
+            } catch (Exception $e) {
+                $transaction->rollback();
+                Yii::app()->user->setFlash('error', 'Errore: '.$e->getMessage());
+            }
+        }
+
+        $this->render('editFull', array(
+            'version' => $version,
+            'sections' => $sections,
+            'hasResponses' => $hasResponses,
+        ));
+    }
+
+
+    public function loadModel($id)
+    {
+        $model = QuestionnaireSection::model()->findByPk($id);
+        if ($model === null)
+            throw new CHttpException(404, 'Sezione non trovata.');
+        return $model;
+    }
+
+    /**
+     * Action AJAX per ottenere i valori possibili per condition_value
+     * in base al campo condition_field selezionato
+     */
+    public function actionGetConditionValues()
+    {
+        if (!Yii::app()->request->isAjaxRequest) {
+            throw new CHttpException(400, 'Richiesta non valida.');
+        }
+
+        $field = Yii::app()->request->getParam('field');
+        $response = array();
+
+        // Mappatura dei campi disponibili con i loro valori possibili
+        $fieldValues = array(
+            'tipologia_id' => array(
+                'type' => 'select',
+                'values' => CHtml::listData(TipologiaSoggiorni::model()->findAll(array('order' => 'tipologia ASC')), 'id', 'tipologia')
+            ),
+            'centro' => array(
+                'type' => 'select', 
+                'values' => CHtml::listData(Soggiorni::model()->findAll(array('order' => 'nome ASC')), 'id', 'nome')
+            ),
+            'ente' => array(
+                'type' => 'select',
+                'values' => CHtml::listData(Clienti::model()->findAll(array('order' => 'nome ASC')), 'id', 'nome')
+            ),
+            'anno' => array(
+                'type' => 'text',
+                'placeholder' => 'es. 2024'
+            ),
+            'eta' => array(
+                'type' => 'text',
+                'placeholder' => 'es. 18 o 18,25,30'
+            ),
+            'organizzatore' => array(
+                'type' => 'text',
+                'placeholder' => 'es. 1 o 1,2,3'
+            ),
+            'soggiorno' => array(
+                'type' => 'text',
+                'placeholder' => 'es. 5 o 5,10,15'
+            ),
+            'turno' => array(
+                'type' => 'text',
+                'placeholder' => 'es. 1 o 1,2,3'
+            )
+        );
+
+        if (isset($fieldValues[$field])) {
+            $response = $fieldValues[$field];
+        } else {
+            $response = array(
+                'type' => 'text',
+                'placeholder' => 'Inserisci valore'
+            );
+        }
+
+        echo CJSON::encode($response);
+        Yii::app()->end();
+    }
+}

@@ -1,0 +1,168 @@
+.focused-form .login-logo {
+margin-top: 30px; 
+margin-bottom: 30px;
+}
+footer {
+ height: 60px; 
+}
+.or_bold{
+    color:#e16040;
+    font-weight: 200;
+}
+#topnav.navbar-default .navbar-brand {
+background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
+}
+.errorMessage {
+    color:#e16040;
+    text-align: left;
+    font-weight: bold;
+}
+
+#home-text {
+    margin: 18px 0 35px;
+}
+
+.home-hero {
+    background: #ffffff;
+    border: 1px solid #e6eaed;
+    border-left: 4px solid #009ee2;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 22px;
+    padding: 22px 18px;
+}
+
+.home-hero h1 {
+    color: #2b3d51;
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    line-height: 1.25;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+}
+
+.home-hero p {
+    color: #5f6f7f;
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.home-actions {
+    margin-bottom: 24px;
+}
+
+.home-action-card {
+    background: #ffffff;
+    border: 1px solid #e6eaed;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    color: #34495e;
+    display: block;
+    margin-bottom: 15px;
+    min-height: 116px;
+    overflow: hidden;
+    padding: 18px 16px 18px 78px;
+    position: relative;
+    text-decoration: none !important;
+    transition: box-shadow 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+.home-action-card:hover,
+.home-action-card:focus {
+    border-color: #009ee2;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    color: #34495e;
+    outline: none;
+    text-decoration: none !important;
+    transform: translateY(-2px);
+}
+
+.home-action-icon {
+    align-items: center;
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    font-size: 22px;
+    height: 46px;
+    justify-content: center;
+    left: 16px;
+    position: absolute;
+    top: 20px;
+    width: 46px;
+}
+
+.home-action-blue .home-action-icon {
+    background: #009ee2;
+}
+
+.home-action-orange .home-action-icon {
+    background: #f0ad4e;
+}
+
+.home-action-green .home-action-icon {
+    background: #8bc34a;
+}
+
+.home-action-title {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+}
+
+.home-action-description {
+    color: #687887;
+    display: block;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.home-content-card {
+    background: #ffffff;
+    border: 1px solid #e6eaed;
+    border-radius: 4px;
+    padding: 20px 18px;
+}
+
+.home-content-card ul {
+    margin: 0 0 18px;
+    padding-left: 0;
+}
+
+@media (min-width: 768px) {
+    #home-text {
+        margin: 35px 25px;
+    }
+
+    .home-hero {
+        padding: 28px 30px;
+    }
+
+    .home-hero h1 {
+        font-size: 32px;
+    }
+
+    .home-action-card {
+        min-height: 154px;
+        padding: 22px 20px;
+        text-align: center;
+    }
+
+    .home-action-icon {
+        display: inline-flex;
+        height: 54px;
+        left: auto;
+        margin-bottom: 14px;
+        position: static;
+        top: auto;
+        width: 54px;
+    }
+
+    .home-content-card {
+        padding: 26px 30px;
+    }
+}

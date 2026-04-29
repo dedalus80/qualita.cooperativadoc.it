@@ -1,0 +1,8 @@
+{
+  "name": "Cooperativa Doc",
+  "short_name": "Cooperativa Doc",
+  "start_url": "/",
+  "display": "standalone",
+  "gcm_sender_id": "390617454108",
+  "gcm_user_visible_only": true
+}

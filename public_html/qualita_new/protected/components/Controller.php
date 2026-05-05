@@ -48,9 +48,9 @@ class Controller extends CController
 			}
 		}*/
 
-		if (Yii::app()->user->isGuest && $this->id != "site" && $this->action->id != 'index') {
+		if (Yii::app()->user->isGuest && !$this->isPublicAction()) {
             $this->redirect(Yii::app()->createUrl('site/login'));
-		}
+        }
 
 		if(Yii::app()->user->id && Yii::app()->user->getState('expiredPassword') && Yii::app()->user->getState('expiredPassword') < time() && $this->action->id != 'expired') {
 			//la password è scaduta
@@ -63,6 +63,21 @@ class Controller extends CController
 
 		return parent::beforeAction($action);
     }
+
+	protected function isPublicAction()
+	{
+		if($this->id == 'site' || $this->action->id == 'index') {
+			return true;
+		}
+
+		$publicActions = array(
+			'document' => array('publicDownload'),
+			'documentiQualita' => array('publicDownload'),
+			'documentiSoggiorni' => array('publicDownload'),
+		);
+
+		return isset($publicActions[$this->id]) && in_array($this->action->id, $publicActions[$this->id]);
+	}
 
 	private function getInfoRequest() 
 	{

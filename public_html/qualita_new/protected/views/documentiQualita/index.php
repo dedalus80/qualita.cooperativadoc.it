@@ -18,15 +18,20 @@ $('.search-button').click(function(){
 	return false;
 });
 ");
+
+$isProceduraFilter = !empty($proceduraId);
+$titoloDocumenti = $isProceduraFilter ? 'Documenti' : 'Tutti i documenti';
 ?>
 
 <div class="panel panel-default panel-margin panel-480">
     <div class="panel-heading">
-        <h2><i class='fa fa-check'></i>&nbsp;Documenti</h2>
+        <h2><i class='fa fa-check'></i>&nbsp;<?php echo $titoloDocumenti; ?></h2>
         <div class="panel-ctrls">
             <ul class="demo-btns">
                 <li><?php echo CHtml::link('<i class="fa fa-search"></i>', '#', array('class' => 'open-search button-icon button-icon-orange', 'id' => 'open-search-btn', 'rel' => 'tooltip', 'data-toggle' => 'tooltip', 'title' => Yii::t('app', 'Ricerca documento'))); ?></li>
-                <li><?php echo CHtml::link('<i class="fa fa-plus"></i>', array('create','id'=>$proceduraId), array('class' => 'button-icon button-icon-green', 'id' => '', 'rel' => 'tooltip', 'data-toggle' => 'tooltip', 'title' => Yii::t('app', 'Nuovo documento'))); ?></li>
+                <?php if ($isProceduraFilter): ?>
+                    <li><?php echo CHtml::link('<i class="fa fa-plus"></i>', array('create','id'=>$proceduraId), array('class' => 'button-icon button-icon-green', 'id' => '', 'rel' => 'tooltip', 'data-toggle' => 'tooltip', 'title' => Yii::t('app', 'Nuovo documento'))); ?></li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>
@@ -57,7 +62,7 @@ $('.search-button').click(function(){
 					'header'=>'Procedura',
 					'name'=>'procedura.procedura',
 					'type'=>'raw',
-					'value'=>'$data->procedura->procedura',
+					'value'=>'$data->procedura ? $data->procedura->procedura : ""',
 				),
 				'titolo',
 				'codice',
@@ -67,12 +72,22 @@ $('.search-button').click(function(){
 					'header'=>'Funzione responsabile',
 					'name'=>'funzioneResponsabile.nome',
 					'type'=>'raw',
-					'value'=>'$data->funzioneResponsabile->nome',
+					'value'=>'$data->funzioneResponsabile ? $data->funzioneResponsabile->nome : ""',
 				),
 				array(
 					'name'  => 'Filename',
 					'value' => 'CHtml::link($data->filename,Yii::app()->createUrl("documentiQualita/download",array("id"=>$data->id)))',
 					'type'  => 'raw',
+				),
+				array(
+					'header'=>'Condividi',
+					'type'=>'raw',
+					'value'=>'Yii::app()->controller->widget("DocumentShareButton", array(
+						"url" => DocumentPublicDownload::createUrl("documentiQualita/publicDownload", $data->id),
+						"title" => $data->titolo,
+						"filename" => $data->filename,
+					), true)',
+					'htmlOptions' => array('style' => 'width:auto;text-align:center'),
 				),
 				array(
                     'class' => 'CButtonColumn',
@@ -107,10 +122,10 @@ $('.search-button').click(function(){
     <div class="modal-dialog" style="max-width: 650px;">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" ><i class='fa fa-check'></i>&nbsp; Documenti</h4>
+                <h4 class="modal-title" ><i class='fa fa-check'></i>&nbsp; <?php echo $titoloDocumenti; ?></h4>
             </div>
             <div class="modal-body">
-                <?php $this->renderPartial('_search', array('model' => $model)); ?>   
+                <?php $this->renderPartial('_search', array('model' => $model, 'proceduraId' => $proceduraId)); ?>   
             </div>
             <div class="modal-footer">
                 <?php echo CHtml::link('<i class="fa fa-search"></i>&nbsp;&nbsp;Ricerca', '#', array('class' => 'btn btn-orange btn-submit-form', 'data-refer' => 'search-form-int')); ?>

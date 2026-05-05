@@ -40,6 +40,7 @@ class DocumentiQualita extends CActiveRecord
 	public $modificato_da_utente;
 	public $oldFilename;
 	public $document;
+	public $useProceduraAttributeFilter = true;
 
 	/**
 	 * Returns the static model of the specified AR class.
@@ -139,7 +140,10 @@ class DocumentiQualita extends CActiveRecord
 		$criteria=new CDbCriteria;
 
 		$criteria->compare('id',$this->id);
-		$criteria->compare('procedura_id',($proceduraId ? $proceduraId : $this->procedura_id));
+		if($proceduraId !== null && $proceduraId !== '')
+			$criteria->compare('procedura_id',$proceduraId);
+		else if($this->useProceduraAttributeFilter && $this->procedura_id !== null && $this->procedura_id !== '')
+			$criteria->compare('procedura_id',$this->procedura_id);
 		$criteria->compare('sgq',$this->sgq,true);
 		$criteria->compare('tipologia',$this->tipologia,true);
 		$criteria->compare('codice',$this->codice,true);

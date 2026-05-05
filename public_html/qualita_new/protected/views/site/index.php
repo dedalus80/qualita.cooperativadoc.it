@@ -5,6 +5,7 @@ $this->breadcrumbs = array(
 );
 
 $baseUrl = Yii::app()->request->baseUrl;
+//$documentiQualitaUrl = Yii::app()->user->getState('group') == 'ADMIN' ? $baseUrl . '/index.php/documentiQualitaProcedure/admin' : $baseUrl . '/index.php/documentiQualita/index';
 $quickLinks = array(
     array(
         'label' => 'Apri Non Conformità',
@@ -27,6 +28,13 @@ $quickLinks = array(
         'icon' => 'fa fa-check',
         'class' => 'home-action-green',
     ),
+    array(
+        'label' => 'Elenco documenti',
+        'description' => 'Accedi a tutti i documenti qualità disponibili.',
+        'url' => $baseUrl . '/index.php/documentiQualita/index',
+        'icon' => 'fa fa-file-o',
+        'class' => 'home-action-blue',
+    ),
 );
 ?>
 <div class="row" id="home-text">
@@ -38,7 +46,7 @@ $quickLinks = array(
 
         <div class="row home-actions">
             <?php foreach ($quickLinks as $quickLink): ?>
-                <div class="col-xs-12 col-sm-4">
+                <div class="col-xs-12 col-sm-6 col-md-3">
                     <a class="home-action-card <?php echo $quickLink['class']; ?>" href="<?php echo CHtml::encode($quickLink['url']); ?>">
                         <span class="home-action-icon"><i class="<?php echo CHtml::encode($quickLink['icon']); ?>"></i></span>
                         <span class="home-action-title"><?php echo CHtml::encode($quickLink['label']); ?></span>

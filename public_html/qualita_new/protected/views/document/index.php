@@ -76,6 +76,16 @@ $('.search-button').click(function(){
 					'type'  => 'raw',
 				),
 				array(
+					'header'=>'Condividi',
+					'type'=>'raw',
+					'value'=>'Yii::app()->controller->widget("DocumentShareButton", array(
+						"url" => DocumentPublicDownload::createUrl("document/publicDownload", $data->id),
+						"title" => $data->titolo,
+						"filename" => $data->filename,
+					), true)',
+					'htmlOptions' => array('style' => 'width:auto;text-align:center'),
+				),
+				array(
                     'class' => 'CButtonColumn',
                     'header' => "Operazioni",
                     'headerHtmlOptions' => array('class' => 'centered dark'),

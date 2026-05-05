@@ -73,6 +73,16 @@ $('.search-button').click(function(){
 					'value' => 'CHtml::link($data->filename,Yii::app()->createUrl("DocumentiSoggiorni/download",array("id"=>$data->id)))',
 					'type'  => 'raw',
 				),
+				array(
+					'header'=>'Condividi',
+					'type'=>'raw',
+					'value'=>'Yii::app()->controller->widget("DocumentShareButton", array(
+						"url" => DocumentPublicDownload::createUrl("documentiSoggiorni/publicDownload", $data->id),
+						"title" => $data->titolo,
+						"filename" => $data->filename,
+					), true)',
+					'htmlOptions' => array('style' => 'width:auto;text-align:center'),
+				),
 			),
 		)); ?>
 	</div>

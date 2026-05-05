@@ -27,6 +27,10 @@ class DocumentiSoggiorniController extends Controller
 	public function accessRules()
 	{
 		return array(
+			array('allow',
+				'actions'=>array('publicDownload'),
+				'users'=>array('*'),
+			),
 			array('allow',  // allow all users to perform 'index' and 'view' actions
 				'actions'=>array('index','view','download','admin','create','update','delete'),
 				'users'=>array('@'),
@@ -206,30 +210,21 @@ class DocumentiSoggiorniController extends Controller
 		$this->authorize('DocumentiSoggiorni', 'view');
 
 		$document = $this->loadModel($id);
-		$src = Yii::app()->basePath."/documenti_soggiorni/".$document->filename;
+		$baseDir = Yii::app()->basePath."/documenti_soggiorni";
+		$src = $baseDir."/".$document->filename;
+		DocumentPublicDownload::sendFile($src, $baseDir);
+	}
 
-		if(@file_exists($src)) {
-
-			$path_parts = @pathinfo($src);
-
-			//$mime = $this->__get_mime($path_parts['extension']);
-
-			header('Content-Description: File Transfer');
-			header('Content-Type: application/octet-stream');
-			//header('Content-Type: '.$mime);
-			header('Content-Disposition: attachment; filename='.basename($src));
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-			header('Pragma: public');
-			header('Content-Length: ' . filesize($src));
-			ob_clean();
-			flush();
-			readfile($src);
-		} else {
-			header("HTTP/1.0 404 Not Found");
-			exit();
+	public function actionPublicDownload($id, $expires, $token)
+	{
+		if(!DocumentPublicDownload::validateRequest('documentiSoggiorni/publicDownload', $id, $expires, $token)) {
+			throw new CHttpException(403, 'Il link al documento non è valido o è scaduto.');
 		}
+
+		$document = $this->loadModel($id);
+		$baseDir = Yii::app()->basePath."/documenti_soggiorni";
+		$src = $baseDir."/".$document->filename;
+		DocumentPublicDownload::sendFile($src, $baseDir);
 	}
 
 	/**

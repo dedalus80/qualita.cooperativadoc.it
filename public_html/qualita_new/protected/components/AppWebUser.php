@@ -19,7 +19,7 @@ class AppWebUser extends CWebUser
             return true;
         }
 
-        if($section == 'Area Documenti') {
+        if($section == 'Area Documenti' || $section == 'DocumentiQualita' || $section == 'DocumentiSoggiorni') {
             //verificare se l'utente ha il permesso per la sezione sulla tabella users colonna area_documenti
             $user = Utenti::model()->findByPk(Yii::app()->user->getId());
             if($user->area_documenti == 'Y') {

@@ -15,6 +15,8 @@
             if(Yii::app()->user->getState('group') == 'ADMIN')
                 $this->items[] = array('label'=>'Procedure documenti', 'url'=> Yii::app()->request->baseUrl.'/index.php/documentProcedure/admin');
 
+            $this->items[] = array('label'=>'Elenco Documenti', 'url'=> Yii::app()->request->baseUrl.'/index.php/document/index');
+
             foreach ($items as $item)
                 $this->items[] = array('label'=>$item->name, 'url'=> Yii::app()->request->baseUrl.'/index.php/document/index/'.$item->id);
 

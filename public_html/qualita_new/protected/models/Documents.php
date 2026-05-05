@@ -112,7 +112,7 @@ class Documents extends CActiveRecord
 	{
 		return array(
 			'id' => 'ID',
-			'category_id' => 'Category',
+			'category_id' => 'Categoria',
 			'procedura_id' => 'Procedura',
 			'sgq' => 'Sgq',
 			'tipologia' => 'Tipologia',

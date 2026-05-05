@@ -6,6 +6,12 @@
 	'id' => 'search-form-int'
 )); ?>
 
+	<?php $selectedCategory = !empty($categoryId) ? array($categoryId => array('selected' => true)) : array(); ?>
+	<div class="form-group">
+		<label class="col-xs-3 control-label"><?php echo $form->labelEx($model,'category_id'); ?></label>
+		<div class="col-xs-8"><?php echo $form->dropDownList($model,'category_id', CHtml::listData(DocumentsCategory::model()->findAll(), 'id', 'name'), array('empty'=>'Seleziona categoria','class' =>'form-control', 'options' => $selectedCategory)); ?></div>
+	</div>
+
 	<div class="form-group">
 		<label class="col-xs-3 control-label"><?php echo $form->labelEx($model,'procedura_id'); ?></label>
 		<div class="col-xs-8"><?php 

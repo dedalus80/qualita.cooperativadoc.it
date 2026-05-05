@@ -168,28 +168,27 @@ class DocumentController extends Controller
 			if($_GET['Documents']['category_id'])
 				$id = intval($_GET['Documents']['category_id']);
 		}
-		else {
-			if(!$id) $id = 1;
-		}
 
-		$category = DocumentsCategory::model()->findByPk($id);
+		$category = $id ? DocumentsCategory::model()->findByPk($id) : null;
 
-		if(!$category) {
+		if($id && !$category) {
 			throw new CHttpException(404,'La categoria documento non è stata trovata.');
 		}
+
+		$categoryName = $category ? $category->name : 'Elenco documenti';
 
 		if(Yii::app()->user->getState('group') == 'ADMIN') {
 			$this->render('index',array(
 				'model'=>$model,
 				'categoryId' => $id,
-				'category' => $category->name,
+				'category' => $categoryName,
 			));
 		}
 		else {
 			$this->render('index_user',array(
 				'model'=>$model,
 				'categoryId' => $id,
-				'category' => $category->name,
+				'category' => $categoryName,
 			));
 		}
 	}

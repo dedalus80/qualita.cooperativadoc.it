@@ -136,7 +136,7 @@ class UtentiController extends Controller {
                 $mail = new YiiMailer('activation_account', array('model' => $model));
                 //$mail->SMTPDebug = PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
                 $mail->setTo($model->email);
-                $mail->setFrom('gest.qualita@cooperativadoc.it', 'Qualità Cooperativa DOC');
+                $mail->setFrom('noreply@cooperativadoc.it', 'Qualità Cooperativa DOC');
                 $mail->setSubject('Attivazione account piattaforma Qualità');
                 $mail->setLayout('mail');
                 

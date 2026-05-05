@@ -280,7 +280,16 @@ return array(
                 )
             )
 
-        )    
+        ),
+        'mailer' => array(
+            'Mailer' => 'smtp',
+            'Host' => 'smtp.office365.com',
+            'Port' => 587,
+            'SMTPAuth' => true,
+            'Username' => 'noreply@cooperativadoc.it',
+            'Password' => 'Q^682722741895on',
+            'SMTPSecure' => 'tls',
+        ),
     ),
     // application-level parameters that can be accessed
     // using Yii::app()->params['paramName']
@@ -293,8 +302,8 @@ return array(
             'port'=>587,
             'secure'=>'tls',
             'auth'=>true,
-            'username'=>'gest.qualita@cooperativadoc.it',
-            'password'=>'Daq01129'
+            'username'=>'noreply@cooperativadoc.it',
+            'password'=>'Q^682722741895on'
         ]
     ),
 );

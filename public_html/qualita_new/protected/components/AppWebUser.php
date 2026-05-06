@@ -15,14 +15,21 @@ class AppWebUser extends CWebUser
         $role = UtentiTipi::model()->findByPk($roleId);
         $permission = json_decode($role->permissions, true);
 
-        if(isset($permission[$section]['enabled']) && $permission[$section]['enabled'] == 1) {
-            return true;
-        }
-
         if($section == 'Area Documenti' || $section == 'DocumentiQualita' || $section == 'DocumentiSoggiorni') {
             //verificare se l'utente ha il permesso per la sezione sulla tabella users colonna area_documenti
             $user = Utenti::model()->findByPk(Yii::app()->user->getId());
-            if($user->area_documenti == 'Y') {
+            if($section == 'Area Documenti' && $user->area_documenti == 'Y') {
+                return true;
+            }
+            if($section == 'DocumentiQualita' && $user->documenti_qualita == 'Y') {
+                return true;
+            }
+            if($section == 'DocumentiSoggiorni' && $user->documenti_soggiorni == 'Y') {
+                return true;
+            }
+        }
+        else {
+            if(isset($permission[$section]['enabled']) && $permission[$section]['enabled'] == 1) {
                 return true;
             }
         }

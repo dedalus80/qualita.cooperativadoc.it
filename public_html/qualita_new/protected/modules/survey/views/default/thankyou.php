@@ -191,7 +191,7 @@ if (isset($questionnaire) && $questionnaire && !empty($questionnaire->logo)) {
                             Per qualsiasi domanda o informazione aggiuntiva, non esitare a contattarci:
                         </p>
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <a href="mailto:info@keluar.it" class="btn btn-outline-primary">
+                            <a href="mailto:<?php echo $emailContact; ?>" class="btn btn-outline-primary">
                                 <i class="fa fa-envelope"></i> <?php echo $emailContact; ?>
                             </a>
                             <a href="tel:+390123456789" class="btn btn-outline-secondary">

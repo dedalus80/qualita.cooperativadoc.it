@@ -1,7 +1,7 @@
 <?php
 
 $HOME   = Yii::app()->getBaseUrl(true);
-$IMG    = $HOME."/images/logo_doc_qualita.png";
+$IMG    = $HOME."/images/DOC_GCM_2021_slim_02.png";
 
 echo '<link href="'.$HOME.'/css/pdf.css" type="text/css" rel="stylesheet"/>';
 

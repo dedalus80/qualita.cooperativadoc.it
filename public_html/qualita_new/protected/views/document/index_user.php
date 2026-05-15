@@ -61,7 +61,7 @@ $('.search-button').click(function(){
 				),
 				'titolo',
 				array(
-					'header'=>'Descrizione breve',
+					'header'=>'Descrizione',
 					'name'=>'description',
 					'type'=>'raw',
 					'value'=>'CHtml::encode($data->description)',

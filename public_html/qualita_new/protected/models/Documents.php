@@ -142,7 +142,7 @@ class Documents extends CActiveRecord
 			'revisione' => 'Revisione',
 			'data_revisione' => 'Data Revisione',
 			'titolo' => 'Titolo Documento',
-			'description' => 'Descrizione breve',
+			'description' => 'Descrizione',
 			'publication_date' => 'Data di pubblicazione',
 			'external_url' => 'Link video Vimeo/YouTube',
 			'redige' => 'Redige',
@@ -207,6 +207,7 @@ class Documents extends CActiveRecord
 		$criteria->compare('modificato_user_id',$this->modificato_user_id);
 		$criteria->compare('filename',$this->filename,true);
 		$criteria->with = array('procedura','category');
+		$criteria->order = 't.publication_date DESC, t.titolo ASC';
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,

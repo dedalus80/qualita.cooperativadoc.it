@@ -61,18 +61,26 @@ class DocumentController extends Controller
 	public function actionCreate($id = null)
 	{
 		$this->authorize('Area Documenti', 'create');
+		$categoryId = $id ? $id : Yii::app()->request->getParam('category_id');
+		$category = $categoryId ? DocumentsCategory::model()->findByPk($categoryId) : null;
+
+		if(!$category) {
+			throw new CHttpException(404,'La categoria documento non è stata trovata.');
+		}
 
 		$model=new Documents('insert');
+		$model->category_id = $categoryId;
 
 		// Uncomment the following line if AJAX validation is needed
 		// $this->performAjaxValidation($model);
 
 		if(isset($_POST['Documents'])) {
 			$model->attributes=$_POST['Documents'];
+			$model->category_id = $categoryId;
 			$model->document = CUploadedFile::getInstance($model, 'document');
 
 			if($model->document) {
-				$fileName = $model->document->getName();
+				$fileName = $this->sanitizeUploadedFilename($model->document->getName());
 				$model->setAttribute('filename', $fileName);
 			}
 
@@ -88,7 +96,7 @@ class DocumentController extends Controller
 
 		$this->render('create',array(
 			'model'=>$model,
-			'categoryId'=>$id,
+			'categoryId'=>$categoryId,
 		));
 	}
 
@@ -110,14 +118,17 @@ class DocumentController extends Controller
 
 		if(isset($_POST['Documents']))
 		{
+			$fileName = null;
 			$model->oldFilename = $model->filename;
+			$categoryId = $model->category_id;
 
 			$model->attributes=$_POST['Documents'];
+			$model->category_id = $categoryId;
 
 			$model->document = CUploadedFile::getInstance($model, 'document');
 			if($model->document) {
-				$fileName = $model->document->getName();
-            	$model->setAttribute('filename', $fileName);
+				$fileName = $this->sanitizeUploadedFilename($model->document->getName());
+             	$model->setAttribute('filename', $fileName);
 			}
 			else {
 				$model->setAttribute('filename', $model->oldFilename);
@@ -258,5 +269,18 @@ class DocumentController extends Controller
 			echo CActiveForm::validate($model);
 			Yii::app()->end();
 		}
+	}
+
+	protected function sanitizeUploadedFilename($filename)
+	{
+		$filename = basename(str_replace('\\', '/', $filename));
+		$filename = str_replace(array('/', '\\', "\0", "\r", "\n", '"'), '', $filename);
+		$filename = trim($filename);
+
+		if($filename === '') {
+			$filename = uniqid('document_', true);
+		}
+
+		return $filename;
 	}
 }

@@ -14,23 +14,23 @@
 	<br />
 
 	<b><?php echo CHtml::encode($data->getAttributeLabel('procedura_id')); ?>:</b>
-	<?php echo CHtml::encode($data->procedura_id); ?>
+	<?php echo CHtml::encode($data->procedura ? $data->procedura->procedura : ''); ?>
 	<br />
 
-	<b><?php echo CHtml::encode($data->getAttributeLabel('sgq')); ?>:</b>
-	<?php echo CHtml::encode($data->sgq); ?>
+	<b><?php echo CHtml::encode($data->getAttributeLabel('titolo')); ?>:</b>
+	<?php echo CHtml::encode($data->titolo); ?>
 	<br />
 
-	<b><?php echo CHtml::encode($data->getAttributeLabel('tipologia')); ?>:</b>
-	<?php echo CHtml::encode($data->tipologia); ?>
+	<b><?php echo CHtml::encode($data->getAttributeLabel('description')); ?>:</b>
+	<?php echo CHtml::encode($data->description); ?>
 	<br />
 
-	<b><?php echo CHtml::encode($data->getAttributeLabel('codice')); ?>:</b>
-	<?php echo CHtml::encode($data->codice); ?>
+	<b><?php echo CHtml::encode($data->getAttributeLabel('publication_date')); ?>:</b>
+	<?php echo CHtml::encode($data->publication_date ? date('d-m-Y', strtotime($data->publication_date)) : ''); ?>
 	<br />
 
-	<b><?php echo CHtml::encode($data->getAttributeLabel('numero')); ?>:</b>
-	<?php echo CHtml::encode($data->numero); ?>
+	<b><?php echo CHtml::encode($data->getAttributeLabel('external_url')); ?>:</b>
+	<?php echo $data->external_url ? CHtml::link(CHtml::encode($data->external_url), $data->external_url, array('target'=>'_blank', 'rel'=>'noopener')) : ''; ?>
 	<br />
 
 	<?php /*

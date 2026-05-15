@@ -58,9 +58,12 @@ o <b>=</b>) all'inizio di ciascuno dei valori di ricerca per specificare come de
 			'value' => '$data->procedura ? $data->procedura->procedura : ""',
 			'filter' => CHtml::dropDownList('Documents[procedura_id]', $model->procedura_id, CHtml::listData(DocumentsProcedures::model()->findAll(), 'id', 'procedura'), ['empty'=>'-- --', 'class'=>'form-control'])
 		),
-		'sgq',
-		'tipologia',
-		'codice',
+		'titolo',
+		array(
+			'name' => 'publication_date',
+			'value' => '$data->publication_date ? date("d-m-Y", strtotime($data->publication_date)) : ""',
+		),
+		'description',
 		array(
 			'class' => 'CButtonColumn',
 			'headerHtmlOptions' => array('class' => 'centered dark', 'style'=>'width:100px'),

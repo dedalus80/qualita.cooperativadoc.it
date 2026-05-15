@@ -48,10 +48,10 @@ $('.search-button').click(function(){
 			'columns'=>array(
 				'id',
 				array(
-					'header'=>'Creato il',
-					'name'=>'data_inserimento',
+					'header'=>'Pubblicato il',
+					'name'=>'publication_date',
 					'type'=>'raw',
-					'value'=>'date("d-m-Y", strtotime($data->data_inserimento))',
+					'value'=>'$data->publication_date ? date("d-m-Y", strtotime($data->publication_date)) : ""',
 				),
 				array(
 					'header'=>'Procedura',
@@ -60,18 +60,22 @@ $('.search-button').click(function(){
 					'value'=>'$data->procedura ? $data->procedura->procedura : ""',
 				),
 				'titolo',
-				'codice',
-				'numero',
-				'tipologia',
 				array(
-					'header'=>'Funzione responsabile',
-					'name'=>'funzioneResponsabile.nome',
+					'header'=>'Descrizione breve',
+					'name'=>'description',
 					'type'=>'raw',
-					'value'=>'$data->funzioneResponsabile ? $data->funzioneResponsabile->nome : ""',
+					'value'=>'CHtml::encode($data->description)',
+				),
+				array(
+					'header'=>'Video',
+					'name'=>'external_url',
+					'type'=>'raw',
+					'value'=>'$data->external_url ? CHtml::link("<i class=\"fa fa-play\"></i>", $data->external_url, array("target"=>"_blank", "rel"=>"noopener tooltip", "data-toggle"=>"tooltip", "title"=>"Apri video")) : ""',
+					'htmlOptions' => array('style' => 'width:auto;text-align:center'),
 				),
 				array(
 					'name'  => 'Filename',
-					'value' => 'CHtml::link($data->filename,Yii::app()->createUrl("document/download",array("id"=>$data->id)))',
+					'value' => 'CHtml::link(CHtml::encode($data->filename),Yii::app()->createUrl("document/download",array("id"=>$data->id)))',
 					'type'  => 'raw',
 				),
 				array(
@@ -96,7 +100,7 @@ $('.search-button').click(function(){
                 <h4 class="modal-title" ><i class='fa fa-check'></i>&nbsp; Documenti</h4>
             </div>
             <div class="modal-body">
-                <?php $this->renderPartial('_search', array('model' => $model)); ?>
+				<?php $this->renderPartial('_search', array('model' => $model, 'categoryId' => $categoryId)); ?>
             </div>
             <div class="modal-footer">
                 <?php echo CHtml::link('<i class="fa fa-search"></i>&nbsp;&nbsp;Ricerca', '#', array('class' => 'btn btn-orange btn-submit-form', 'data-refer' => 'search-form-int')); ?>

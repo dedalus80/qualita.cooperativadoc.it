@@ -50,7 +50,26 @@ background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
 }
 
 .home-actions {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     margin-bottom: 24px;
+}
+
+.home-actions:before,
+.home-actions:after {
+    display: none;
+}
+
+.home-action-col {
+    display: flex;
+    float: none;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+    width: 100%;
 }
 
 .home-action-card {
@@ -60,6 +79,7 @@ background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     color: #34495e;
     display: block;
+    flex: 1 1 auto;
     margin-bottom: 15px;
     min-height: 116px;
     overflow: hidden;
@@ -67,6 +87,7 @@ background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
     position: relative;
     text-decoration: none !important;
     transition: box-shadow 180ms ease, transform 180ms ease, border-color 180ms ease;
+    width: 100%;
 }
 
 .home-action-card:hover,
@@ -146,6 +167,19 @@ background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
         font-size: 32px;
     }
 
+    .home-action-col {
+        width: 50%;
+    }
+
+    .home-actions-count-1 .home-action-col {
+        max-width: 540px;
+        width: 100%;
+    }
+
+    .home-actions-count-3 .home-action-col {
+        width: 33.33333333%;
+    }
+
     .home-action-card {
         min-height: 154px;
         padding: 22px 20px;
@@ -164,5 +198,43 @@ background: url("../img/centri-estivi.png") no-repeat  20px 10px !important;
 
     .home-content-card {
         padding: 26px 30px;
+    }
+}
+
+@media (min-width: 992px) {
+    .home-action-col {
+        width: 33.33333333%;
+    }
+
+    .home-actions-count-1 .home-action-col,
+    .home-actions-count-2 .home-action-col {
+        width: 50%;
+    }
+
+    .home-actions-count-4 .home-action-col {
+        width: 25%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .home-action-col {
+        width: 25%;
+    }
+
+    .home-actions-count-1 .home-action-col,
+    .home-actions-count-2 .home-action-col {
+        width: 50%;
+    }
+
+    .home-actions-count-3 .home-action-col {
+        width: 33.33333333%;
+    }
+
+    .home-actions-count-5 .home-action-col {
+        width: 20%;
+    }
+
+    .home-actions-count-6 .home-action-col {
+        width: 16.66666667%;
     }
 }

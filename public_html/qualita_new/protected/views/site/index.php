@@ -9,33 +9,58 @@ $baseUrl = Yii::app()->request->baseUrl;
 $quickLinks = array(
     array(
         'label' => 'Apri Non Conformità',
-        'description' => 'Registra subito una nuova non conformità rilevata nel servizio.',
+        'description' => 'Registra subito una non conformità.',
         'url' => $baseUrl . '/index.php/dbNonconforme/create',
         'icon' => 'fa fa-thumbs-o-down',
         'class' => 'home-action-blue',
     ),
     array(
         'label' => 'Apri reclamo',
-        'description' => 'Inserisci un nuovo reclamo e avvia il percorso di gestione.',
+        'description' => 'Inserisci un nuovo reclamo.',
         'url' => $baseUrl . '/index.php/dbReclami/create',
         'icon' => 'fa fa-bullhorn',
         'class' => 'home-action-orange',
     ),
     array(
         'label' => 'Elenco verifiche',
-        'description' => 'Consulta rapidamente verifiche, scadenze e attività di controllo.',
+        'description' => 'Consulta le verifiche disponibili.',
         'url' => $baseUrl . '/index.php/azioniVerifiche/index',
         'icon' => 'fa fa-check',
         'class' => 'home-action-green',
     ),
-    array(
-        'label' => 'Elenco documenti',
-        'description' => 'Accedi a tutti i documenti qualità disponibili.',
-        'url' => $baseUrl . '/index.php/documentiQualita/index',
-        'icon' => 'fa fa-file-o',
-        'class' => 'home-action-blue',
-    ),
 );
+
+if (Yii::app()->user->isEnabled('Area Documenti') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
+        'label' => 'Area documenti',
+        'description' => 'Elenco dei documenti disponibili.',
+        'url' => $baseUrl . '/index.php/document/index',
+        'icon' => 'fa fa-files-o',
+        'class' => 'home-action-green',
+    );
+}
+
+if (Yii::app()->user->isEnabled('DocumentiQualita') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
+        'label' => 'Documenti Qualità',
+        'description' => 'Elenco documenti qualità disponibili.',
+        'url' => $baseUrl . '/index.php/documentiQualita/index',
+        'icon' => 'fa fa-files-o',
+        'class' => 'home-action-blue',
+    );
+}
+
+if (Yii::app()->user->isEnabled('DocumentiSoggiorni') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
+        'label' => 'Documenti soggiorni',
+        'description' => 'Elenco documenti dei soggiorni estivi.',
+        'url' => $baseUrl . '/index.php/documentiSoggiorni/index',
+        'icon' => 'fa fa-files-o',
+        'class' => 'home-action-orange',
+    );
+}
+
+$quickLinksCount = count($quickLinks);
 ?>
 <div class="row" id="home-text">
     <div class="col-xs-12">
@@ -44,9 +69,9 @@ $quickLinks = array(
             <p>Accesso rapido alle azioni principali della piattaforma.</p>
         </div>
 
-        <div class="row home-actions">
+        <div class="row home-actions home-actions-count-<?php echo (int) $quickLinksCount; ?>">
             <?php foreach ($quickLinks as $quickLink): ?>
-                <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="col-xs-12 home-action-col">
                     <a class="home-action-card <?php echo $quickLink['class']; ?>" href="<?php echo CHtml::encode($quickLink['url']); ?>">
                         <span class="home-action-icon"><i class="<?php echo CHtml::encode($quickLink['icon']); ?>"></i></span>
                         <span class="home-action-title"><?php echo CHtml::encode($quickLink['label']); ?></span>

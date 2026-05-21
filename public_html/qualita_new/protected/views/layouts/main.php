@@ -262,13 +262,13 @@ if (Yii::app()->user->getId()) {
                                             </li>
                                             <?php endif; ?>
 
-                                            <?php if(Yii::app()->user->isEnabled('DocumentiQualita')):?>
+                                            <?php if(Yii::app()->user->isEnabled('DocumentiQualita') || Yii::app()->user->getState('group') == 'ADMIN'):?>
                                             <li class="hasChild"><a href="javascript:;"><i class="fa fa-file-o"></i><span>Documenti Qualità</span><span class=""><!--<?php //echo $counter['verifiche'] > 0 ? "<span class='badge  badge-warning'>" . $counter['verifiche'] . "</span>" : "" ?>--></span></a>
                                                 <?php $this->widget('application.components.DocumentMenu', array('htmlOptions' => array('class' => 'acc-menu')));?>                                                
                                             </li>
                                             <?php endif;?>
                                             
-                                            <?php if(Yii::app()->user->isEnabled('DocumentiSoggiorni')):?>
+                                            <?php if(Yii::app()->user->isEnabled('DocumentiSoggiorni') || Yii::app()->user->getState('group') == 'ADMIN'):?>
                                             <li class="hasChild"><a href="javascript:;"><i class="fa fa-file-o"></i><span>Documenti Soggiorni Estivi</span><span class=""><!--<?php //echo $counter['verifiche'] > 0 ? "<span class='badge  badge-warning'>" . $counter['verifiche'] . "</span>" : "" ?>--></span></a>
                                                 <?php $this->widget('application.components.DocumentSoggiorniMenu', array('htmlOptions' => array('class' => 'acc-menu')));?>                                                
                                             </li>

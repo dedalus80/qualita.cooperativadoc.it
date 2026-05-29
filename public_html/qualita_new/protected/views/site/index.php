@@ -6,29 +6,37 @@ $this->breadcrumbs = array(
 
 $baseUrl = Yii::app()->request->baseUrl;
 //$documentiQualitaUrl = Yii::app()->user->getState('group') == 'ADMIN' ? $baseUrl . '/index.php/documentiQualitaProcedure/admin' : $baseUrl . '/index.php/documentiQualita/index';
-$quickLinks = array(
-    array(
+$quickLinks = [];
+
+if (Yii::app()->user->isEnabled('AzioniNonConformi') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
         'label' => 'Apri Non Conformità',
         'description' => 'Registra subito una non conformità.',
         'url' => $baseUrl . '/index.php/dbNonconforme/create',
         'icon' => 'fa fa-thumbs-o-down',
         'class' => 'home-action-blue',
-    ),
-    array(
+    );
+}
+
+if (Yii::app()->user->isEnabled('Reclami') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
         'label' => 'Apri reclamo',
         'description' => 'Inserisci un nuovo reclamo.',
         'url' => $baseUrl . '/index.php/dbReclami/create',
         'icon' => 'fa fa-bullhorn',
         'class' => 'home-action-orange',
-    ),
-    array(
+    );
+}
+
+if (Yii::app()->user->isEnabled('Verifiche') || Yii::app()->user->getState('group') == 'ADMIN') {
+    $quickLinks[] = array(
         'label' => 'Elenco verifiche',
         'description' => 'Consulta le verifiche disponibili.',
         'url' => $baseUrl . '/index.php/azioniVerifiche/index',
         'icon' => 'fa fa-check',
         'class' => 'home-action-green',
-    ),
-);
+    );
+}
 
 if (Yii::app()->user->isEnabled('Area Documenti') || Yii::app()->user->getState('group') == 'ADMIN') {
     $quickLinks[] = array(

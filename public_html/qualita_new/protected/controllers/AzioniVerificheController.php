@@ -15,7 +15,7 @@ class AzioniVerificheController extends Controller {
         return array(
             array('allow', // allow all users to perform 'index' and 'view' actions
                 'actions' => array('index', 'view', 'create', 'update', 'admin', 'delete', 'verifica', 'calendario', 'getVerifica', 'setVerifica', 'tipoVerifica', 'indicatoriStrutture','processi','esterne','compila','stampa','modello','downloadNc'),
-                'users' => Yii::app()->MyUtils->getPermition('verifiche'),
+                'users' => Yii::app()->user->accessController('Verifiche'),
             ),
             array('deny', // deny all users
                 'users' => array('*'),

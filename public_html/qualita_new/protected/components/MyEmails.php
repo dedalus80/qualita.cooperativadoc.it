@@ -263,14 +263,19 @@ class MyEmails extends CApplicationComponent {
             $txt .="Ti &egrave; stata assegnata una verifica  ispettiva <b> \"". $dati['tipo_verifica'] . "\"</b>  dall'Ufficio qualit&agrave;.<br />";
             $txt .="Ti ricordiamo di inviare al Responsabile del Soggiorno: <br /><ul>";
             $txt .="<li> il file check list in allegato invitandolo a precompilarlo come autovalutazione. </li>";
-            $txt .="<li> concordare con lui la data effettiva della VII ed inviare al Responsabile il Modello M07_01 Pianificazione Piano di Audit compilato.</li></ul></p>";
+            $txt .="<li> concordare con lui la data effettiva della VII ed inviare al Responsabile il piano della verifica ispettiva compilato attraverso la web app.</li></ul></p>";
             $txt .="<p>Ti ricordo inoltre che al termine della verifica dovrai:"; 
             $txt .="<ol type='1'>";
-            $txt .="<li>Inviare verbale di verifica ispettiva al direttore</li>";
-            $txt .="<li>Inviare il file Excel, allegato alla seguente email, con le risultanze</li>";
-            $txt .="<li>Caricare Diario e Verbale in piattaforma</li>";
-            $txt .="<li>Inviare a qualita@cooperativadoc.it tutta la documentazione sopra citata</li>";
+            $txt .="<li>Compilare il verbale di verifica ispettiva dalla web app.</li>";
+            $txt .="<li>Compilare il diario di verifica dalla web app.</li>";
+            //$txt .="<li>Caricare Diario e Verbale in piattaforma</li>";
+            //$txt .="<li>Inviare a qualita@cooperativadoc.it tutta la documentazione sopra citata</li>";
             $txt .="</ol></p>";
+
+            $txt .= "<p>Ti informo che è possibile accedere alla web app attraverso l'apposito link: <a href=\"https://cooperativadoc.jotform.com/app/261461825197968\" target=\"_blank\">Web App</a></p>";
+            $txt .= "<p>o inquadra il seguente QR code per accedere con il tuo cellulare</p>";
+            $txt .= "<p style=\"text-align:center\"><img src=\"https://qualita.cooperativadoc.it/qualita_new/images/modulistica/qr-code-261461825197968.png\" style=\"width:200px\" /></p>";
+
             $txt .="<p>Codice Verifica: <b>" . $dati['codice_verifica'] . "</b> </p>";
             $txt .="<p>Tipo Verifica: <b>" . $dati['tipo_verifica'] . "</b> </p>";
             $txt .="<p>Data Verifica: <b>" . $dati['data_verifica'] . "</b> <br /></p>";
@@ -321,11 +326,12 @@ class MyEmails extends CApplicationComponent {
 			
 		}else{
 			
-			// Aggiunta modulistica 
-			$this->smtpAllegati[] = "images/modulistica/MD_07_02_Verbale_verifiche_ispettive_interne.dot";
+			// Aggiunta modulistica, non bisogna più allegare documenti
+			/*$this->smtpAllegati[] = "images/modulistica/MD_07_02_Verbale_verifiche_ispettive_interne.dot";
 			$this->smtpAllegati[] = "images/modulistica/MOD_07_04_DIario_VII.dot";
 			$this->smtpAllegati[] = "images/modulistica/MD_07-01_Pianificazione_Piano_di_Audit_rev_001.xlt";
             $this->smtpAllegati[] = "images/modulistica/EL_RIL_VII_REV_00.xlsx";
+            $this->smtpAllegati[] = "images/modulistica/qr-code-261461825197968.png";*/
 			
             if($this->send()){
                 

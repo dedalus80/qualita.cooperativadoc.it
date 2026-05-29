@@ -1,7 +1,9 @@
 <div class="wide form form-horizontal row-border">
 
+<?php $selectedProcedura = !empty($proceduraId) ? array($proceduraId => array('selected' => true)) : array(); ?>
+
 <?php $form=$this->beginWidget('CActiveForm', array(
-	'action'=>Yii::app()->createUrl($this->route),
+	'action'=>Yii::app()->createUrl($this->route, !empty($proceduraId) ? array('id' => $proceduraId) : array()),
 	'method'=>'get',
 	'id' => 'search-form-int'
 )); ?>

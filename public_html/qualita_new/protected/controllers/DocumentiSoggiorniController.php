@@ -163,15 +163,13 @@ class DocumentiSoggiorniController extends Controller
 		$this->authorize('DocumentiSoggiorni', 'view');
 
 		$model = new DocumentiSoggiorni('search');
+		$model->useProceduraAttributeFilter = false;
         $model->unsetAttributes();
 
         if(isset($_GET['DocumentiSoggiorni'])) {
             $model->attributes = $_GET['DocumentiSoggiorni'];
 			if($_GET['DocumentiSoggiorni']['procedura_id'])
 				$id = intval($_GET['DocumentiSoggiorni']['procedura_id']);
-		}
-		else {
-			if(!$id) $id = 1;
 		}
 
 		if(Yii::app()->user->getState('group') == 'ADMIN') {

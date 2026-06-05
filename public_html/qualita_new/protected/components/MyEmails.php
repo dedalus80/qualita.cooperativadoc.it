@@ -219,7 +219,7 @@ class MyEmails extends CApplicationComponent {
         $this->smtpDest = array();
         
         // Allegato solo la check list  
-        $this->checkAllegatoVerifica($this->smtpDati['code']);
+        $this->checkAllegatoVerifica($this->smtpDati['tipo']);
         
         // ciclo i responsabili e mando mail personalizzata
         if(count($tmp)){
@@ -306,7 +306,7 @@ class MyEmails extends CApplicationComponent {
         */
         
         
-        $this->checkAllegatoVerifica($dati['code']);
+        $this->checkAllegatoVerifica($dati['tipo']);
 		
 		$this->smtpTipo = $tipo; 
         $this->smtpText = $txt;
@@ -343,28 +343,26 @@ class MyEmails extends CApplicationComponent {
         }
 	}
     
-    public function checkAllegatoVerifica($code){
-        /*switch($code){
-            case"VI-A":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-ambientale.pdf";
-            break;
-            case"VI-Q":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-amministrazione.pdf";
-            break;
-            case"VI-E":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-educative.pdf";
-            break;
-            case"VI-P":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-manutenzione.pdf";
-            break;
-            case"VI-R":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-ristorazione.pdf";
-            break;
-            case"VI-S":
-                $this->smtpAllegati[] = "images/modulistica/modello-verifica-ispettiva-sicurezza.pdf";
-            break;
-        }*/
-    
+    public function checkAllegatoVerifica($tipologia){
+        if (!$tipologia) {
+            return;
+        }
+
+        $fileName = Yii::app()->db->createCommand("SELECT file_name FROM doc_tipologie_verifiche WHERE id = :tipologia AND file_name != '' LIMIT 1")
+            ->bindValue(':tipologia', $tipologia)
+            ->queryScalar();
+
+        if (!$fileName) {
+            return;
+        }
+
+        $fileName = basename(str_replace('\\', '/', $fileName));
+        $relativePath = 'images/modulistica/verifiche/' . $fileName;
+        $filePath = Yii::app()->basePath . '/../' . $relativePath;
+
+        if (file_exists($filePath) && is_file($filePath)) {
+            $this->smtpAllegati[] = $relativePath;
+        }
     }
         
     public function sendEmailRe($tipo, $id, $dest = NULL) {
@@ -381,6 +379,7 @@ class MyEmails extends CApplicationComponent {
 
         $dati = Yii::app()->db->createCommand($query)->queryRow();
 
+        $txt = '';
         $txt .="<div style='margin-top: 20px'>";
         $txt .= "<p>Codice riferimento: <b>" . $dati['codice'] . "</b></p> ";
         $txt .= "<p>Data: <b>" . $dati['data_reclamo'] . " </b></p> ";

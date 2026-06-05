@@ -6,6 +6,7 @@ class TipologieVerifiche extends CActiveRecord {
     var $selectIcone = array();
     var $tmpIcona;
     var $tmpColore;
+    public $file_upload;
 
     public static function model($className=__CLASS__) {
         return parent::model($className);
@@ -21,8 +22,10 @@ class TipologieVerifiche extends CActiveRecord {
             array('codice', 'length', 'max' => 6),
             array('colore', 'length', 'max' => 8),
             array('nome', 'length', 'max' => 50),
+            array('file_name', 'length', 'max' => 255),
+            array('file_upload', 'file', 'types' => 'pdf,doc,docx', 'allowEmpty' => true, 'message' => 'Possono essere caricati solo file con le seguenti estensioni pdf, doc, docx'),
             array('is_hidden', 'length', 'max' => 1),
-            array('id, codice, nome, is_hidden', 'safe', 'on' => 'search'),
+            array('id, codice, nome, file_name, is_hidden', 'safe', 'on' => 'search'),
         );
     }
 
@@ -39,6 +42,8 @@ class TipologieVerifiche extends CActiveRecord {
             'codice' => 'Codice',
             'nome' => 'Nome',
             'colore' => 'Colore',
+            'file_name' => 'Documento',
+            'file_upload' => 'Documento',
             'is_hidden' => 'Nascondi',
         );
     }
@@ -49,6 +54,7 @@ class TipologieVerifiche extends CActiveRecord {
         $criteria->compare('codice', $this->codice, true);
         $criteria->compare('colore', $this->codice, true);
         $criteria->compare('nome', $this->nome, true);
+        $criteria->compare('file_name', $this->file_name, true);
         $criteria->compare('is_hidden', $this->is_hidden, true);
         return new CActiveDataProvider($this, array(
                     'criteria' => $criteria,

@@ -233,6 +233,11 @@ class QuestionnaireVersionController extends Controller
             ->with(array(
                 'questions' => array(
                     'order' => '`questions`.`order` ASC',
+                    'with' => array(
+                        'options' => array(
+                            'order' => '`options`.`order` ASC',
+                        )
+                    )
                 )
             ))
             ->findAll(array(

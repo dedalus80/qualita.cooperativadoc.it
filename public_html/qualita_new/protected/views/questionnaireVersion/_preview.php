@@ -70,6 +70,27 @@
                                 </label>
                             <?php endforeach; ?>
                             <p class="help-block"><small>1 = Poco soddisfatto, 5 = Estremamente soddisfatto</small></p>
+
+                        <?php elseif ($question->type == 'custom'): ?>
+                            <?php
+                            $customOptions = $question->options ? array_map(function($opt) { return $opt->option_text; }, $question->options) : [];
+                            if ($question->is_multiple):
+                                $selectedCustom = !empty($customOptions) ? array($customOptions[0]) : [];
+                                foreach ($customOptions as $opt): ?>
+                                    <label class="checkbox-inline">
+                                        <input type="checkbox" disabled <?php echo in_array($opt, $selectedCustom) ? 'checked' : ''; ?>>
+                                        <?php echo CHtml::encode($opt); ?>
+                                    </label>
+                                <?php endforeach;
+                            else:
+                                $selectedCustom = !empty($customOptions) ? $customOptions[0] : null;
+                                foreach ($customOptions as $opt): ?>
+                                    <label class="radio-inline">
+                                        <input type="radio" disabled <?php echo ($opt == $selectedCustom) ? 'checked' : ''; ?>>
+                                        <?php echo CHtml::encode($opt); ?>
+                                    </label>
+                                <?php endforeach;
+                            endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

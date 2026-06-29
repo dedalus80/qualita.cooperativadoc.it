@@ -147,7 +147,24 @@ class QuestionnaireVersionController extends Controller
         $transaction = Yii::app()->db->beginTransaction();
 
         try {
-            $version = $this->loadModel($id);
+            $version = QuestionnaireVersion::model()->with(array(
+                'sections' => array(
+                    'order' => '`sections`.`order` ASC',
+                    'with' => array(
+                        'questions' => array(
+                            'order' => '`questions`.`order` ASC',
+                            'with' => array(
+                                'options' => array(
+                                    'order' => '`options`.`order` ASC',
+                                )
+                            )
+                        )
+                    )
+                )
+            ))->findByPk($id);
+
+            if (!$version)
+                throw new Exception('Versione non trovata');
 
             // crea nuova versione
             $newVersion = new QuestionnaireVersion;
@@ -161,6 +178,7 @@ class QuestionnaireVersionController extends Controller
             foreach ($version->sections as $section) {
                 $newSection = new QuestionnaireSection;
                 $newSection->attributes = $section->attributes;
+                $newSection->id = null;
                 $newSection->version_id = $newVersion->id;
                 if (!$newSection->save())
                     throw new Exception('Errore clonazione sezione');
@@ -168,9 +186,23 @@ class QuestionnaireVersionController extends Controller
                 foreach ($section->questions as $question) {
                     $newQuestion = new Question;
                     $newQuestion->attributes = $question->attributes;
+                    $newQuestion->id = null;
                     $newQuestion->section_id = $newSection->id;
                     if (!$newQuestion->save())
                         throw new Exception('Errore clonazione domanda');
+
+                    // Clona le opzioni per le domande custom
+                    if ($question->type === 'custom' && !empty($question->options)) {
+                        foreach ($question->options as $option) {
+                            $newOption = new QuestionOption;
+                            $newOption->question_id = $newQuestion->id;
+                            $newOption->option_text = $option->option_text;
+                            $newOption->value = $option->value;
+                            $newOption->order = $option->order;
+                            if (!$newOption->save())
+                                throw new Exception('Errore clonazione opzione custom');
+                        }
+                    }
                 }
             }
 

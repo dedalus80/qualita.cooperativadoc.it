@@ -929,7 +929,10 @@ class QuestionnaireController extends Controller
                 'params' => array(':version_id' => $versionId),
                 'order' => '`order` ASC'
             ));
-            
+
+            $oldToNewQuestionIds = array();
+            $newQuestionsWithConditions = array();
+
             foreach ($sections as $section) {
                 $newSection = new QuestionnaireSection();
                 $newSection->version_id = $newVersion->id;
@@ -938,7 +941,7 @@ class QuestionnaireController extends Controller
                 $newSection->condition_field = $section->condition_field;
                 $newSection->condition_operator = $section->condition_operator;
                 $newSection->condition_value = $section->condition_value;
-                
+
                 if (!$newSection->save()) {
                     // Per errori di salvataggio, usa il formato personalizzato
                     $modelErrors = $newSection->getErrors();
@@ -948,21 +951,25 @@ class QuestionnaireController extends Controller
                     echo CJSON::encode($response);
                     Yii::app()->end();
                 }
-                
+
                 // 4. Clona le domande della sezione
                 $questions = Question::model()->findAll(array(
                     'condition' => 'section_id = :section_id',
                     'params' => array(':section_id' => $section->id),
                     'order' => '`order` ASC'
                 ));
-                
+
                 foreach ($questions as $question) {
                     $newQuestion = new Question();
                     $newQuestion->section_id = $newSection->id;
                     $newQuestion->text = $question->text;
                     $newQuestion->type = $question->type;
                     $newQuestion->order = $question->order;
-                    
+                    $newQuestion->is_multiple = $question->is_multiple;
+                    $newQuestion->condition_question_id = $question->condition_question_id;
+                    $newQuestion->condition_operator = $question->condition_operator;
+                    $newQuestion->condition_value = $question->condition_value;
+
                     if (!$newQuestion->save()) {
                         // Per errori di salvataggio, usa il formato personalizzato
                         $modelErrors = $newQuestion->getErrors();
@@ -972,22 +979,30 @@ class QuestionnaireController extends Controller
                         echo CJSON::encode($response);
                         Yii::app()->end();
                     }
-                    
+
+                    $oldToNewQuestionIds[$question->id] = $newQuestion->id;
+                    if (!empty($question->condition_question_id)) {
+                        $newQuestionsWithConditions[] = array(
+                            'newQuestionId' => $newQuestion->id,
+                            'oldConditionQuestionId' => $question->condition_question_id,
+                        );
+                    }
+
                     // 5. Clona le opzioni della domanda (se presenti)
-                    if (in_array($question->type, array('radio', 'checkbox', 'select'))) {
+                    if (in_array($question->type, array('radio', 'checkbox', 'select', 'custom'))) {
                         $options = QuestionOption::model()->findAll(array(
                             'condition' => 'question_id = :question_id',
                             'params' => array(':question_id' => $question->id),
                             'order' => '`order` ASC'
                         ));
-                        
+
                         foreach ($options as $option) {
                             $newOption = new QuestionOption();
                             $newOption->question_id = $newQuestion->id;
                             $newOption->option_text = $option->option_text;
-                            $newOption->option_value = $option->option_value;
+                            $newOption->value = $option->value;
                             $newOption->order = $option->order;
-                            
+
                             if (!$newOption->save()) {
                                 // Per errori di salvataggio, usa il formato personalizzato
                                 $modelErrors = $newOption->getErrors();
@@ -1001,7 +1016,18 @@ class QuestionnaireController extends Controller
                     }
                 }
             }
-            
+
+            // 6. Rimappa i riferimenti condizionali sulle domande clonate
+            foreach ($newQuestionsWithConditions as $item) {
+                $oldConditionQuestionId = $item['oldConditionQuestionId'];
+                if (isset($oldToNewQuestionIds[$oldConditionQuestionId])) {
+                    Question::model()->updateByPk(
+                        $item['newQuestionId'],
+                        array('condition_question_id' => $oldToNewQuestionIds[$oldConditionQuestionId])
+                    );
+                }
+            }
+
             $transaction->commit();
             
             $response['success'] = true;

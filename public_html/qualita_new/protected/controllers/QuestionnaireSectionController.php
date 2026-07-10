@@ -116,20 +116,16 @@ class QuestionnaireSectionController extends Controller
                         foreach ($sectionData['questions'] as $questionData) {
                             $question = new Question;
                             $question->section_id = $section->id;
-                            $question->text = $questionData['text'];
-                            $question->type = $questionData['type'];
-                            $question->order = $questionData['order'];
+                            $this->applyQuestionAttributesFromPost($question, $questionData);
                             
                             // Gestione campi condizionali per nuove domande in createFull
                             if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
                                 $question->condition_question_id = null;
                                 $question->condition_operator = null;
                                 $question->condition_value = null;
-                            } else {
-                                $question->condition_question_id = $questionData['condition_question_id'];
-                                $question->condition_operator = $questionData['condition_operator'];
-                                $question->condition_value = $questionData['condition_value'];
                             }
+
+                            $this->normalizeQuestionForSave($question);
                             
                             if (!$question->save())
                                 throw new Exception('Errore salvataggio domanda: '.$question->text);
@@ -211,7 +207,7 @@ class QuestionnaireSectionController extends Controller
                                 $question = Question::model()->findByPk($question_id);
                                 if (!$question) continue;
 
-                                $question->attributes = $questionData;
+                                $this->applyQuestionAttributesFromPost($question, $questionData);
                                 
                                 // Gestione campi condizionali
                                 if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
@@ -276,7 +272,7 @@ class QuestionnaireSectionController extends Controller
                             foreach ($sectionData['questions'] as $questionData) {
                                 $question = new Question;
                                 $question->setAttribute('section_id', $section->id);
-                                $question->attributes = $questionData;
+                                $this->applyQuestionAttributesFromPost($question, $questionData);
                                 
                                 // Gestione campi condizionali per nuove domande in nuove sezioni
                                 if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
@@ -331,7 +327,7 @@ class QuestionnaireSectionController extends Controller
                         foreach ($questions as $questionData) {
                             $question = new Question;
                             $question->setAttribute('section_id', $section_id);
-                            $question->attributes = $questionData;
+                            $this->applyQuestionAttributesFromPost($question, $questionData);
                             
                             // Gestione campi condizionali per nuove domande in sezioni esistenti
                             if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
@@ -416,12 +412,50 @@ class QuestionnaireSectionController extends Controller
     }
 
     /**
+     * Applica i dati POST alla domanda gestendo i campi checkbox non inviati se deselezionati.
+     */
+    private function applyQuestionAttributesFromPost(Question $question, array $questionData)
+    {
+        $question->attributes = $questionData;
+
+        if ($question->type === 'custom') {
+            $question->is_multiple = !empty($questionData['is_multiple']) ? 1 : 0;
+        }
+    }
+
+    /**
      * Normalizza i campi della domanda in base al tipo prima del salvataggio.
      */
     private function normalizeQuestionForSave(Question $question)
     {
+        if ($question->type === 'text') {
+            $question->type_render = 'textarea';
+            $question->is_multiple = 0;
+            return;
+        }
+
         if ($question->type === 'yes_no') {
             $question->is_multiple = 0;
+            $question->type_render = 'radio';
+            return;
+        }
+
+        if (in_array($question->type, array('option', 'range'), true)) {
+            $question->type_render = 'radio';
+            $question->is_multiple = 0;
+            return;
+        }
+
+        if ($question->type === 'custom') {
+            if (empty($question->type_render)) {
+                $question->type_render = $question->is_multiple ? 'checkbox' : 'radio';
+            }
+
+            if ($question->type_render === 'radio' && $question->is_multiple) {
+                $question->type_render = 'checkbox';
+            } elseif ($question->type_render === 'checkbox' && !$question->is_multiple) {
+                $question->type_render = 'radio';
+            }
         }
     }
 

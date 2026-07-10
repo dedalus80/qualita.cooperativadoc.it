@@ -964,6 +964,7 @@ class QuestionnaireController extends Controller
                     $newQuestion->section_id = $newSection->id;
                     $newQuestion->text = $question->text;
                     $newQuestion->type = $question->type;
+                    $newQuestion->type_render = $question->type_render;
                     $newQuestion->order = $question->order;
                     $newQuestion->is_multiple = $question->is_multiple;
                     $newQuestion->condition_question_id = $question->condition_question_id;
@@ -989,7 +990,7 @@ class QuestionnaireController extends Controller
                     }
 
                     // 5. Clona le opzioni della domanda (se presenti)
-                    if (in_array($question->type, array('radio', 'checkbox', 'select', 'custom'))) {
+                    if (in_array($question->type, array('option', 'custom'), true)) {
                         $options = QuestionOption::model()->findAll(array(
                             'condition' => 'question_id = :question_id',
                             'params' => array(':question_id' => $question->id),

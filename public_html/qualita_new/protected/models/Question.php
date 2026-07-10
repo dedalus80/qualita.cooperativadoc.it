@@ -17,10 +17,11 @@ class Question extends CActiveRecord
             array('section_id, text, type', 'required'),
             array('section_id, order, condition_question_id', 'numerical', 'integerOnly'=>true),
             array('type', 'in', 'range'=>array('text','option','range','custom','yes_no')),
+            array('type_render', 'in', 'range'=>array('checkbox', 'radio', 'select', 'textarea'), 'allowEmpty'=>true),
             array('condition_operator', 'in', 'range'=>array('=', '!=', 'in', 'not in')),
             array('condition_value', 'length', 'max'=>255),
             array('is_multiple', 'boolean'),
-            array('deleted_at, condition_question_id, condition_operator, condition_value', 'safe'),
+            array('deleted_at, condition_question_id, condition_operator, condition_value, type_render', 'safe'),
         );
     }
 
@@ -41,6 +42,7 @@ class Question extends CActiveRecord
             'section_id' => 'Sezione',
             'text' => 'Testo',
             'type' => 'Tipo',
+            'type_render' => 'Visualizzazione risposte',
             'order' => 'Ordine',
             'is_multiple' => 'Risposte Multiple',
             'condition_question_id' => 'Domanda Condizione',
@@ -61,6 +63,40 @@ class Question extends CActiveRecord
         $this->updated_at = date('Y-m-d H:i:s');
         
         return parent::afterValidate();
+    }
+
+    /**
+     * Risolve il tipo di render effettivo in base a type, type_render e is_multiple.
+     */
+    public function getResolvedTypeRender()
+    {
+        if ($this->type === 'text') {
+            return 'textarea';
+        }
+
+        if ($this->type === 'yes_no') {
+            return 'radio';
+        }
+
+        if (in_array($this->type, array('option', 'range'), true)) {
+            return 'radio';
+        }
+
+        if ($this->type === 'custom') {
+            $typeRender = $this->type_render ?: ($this->is_multiple ? 'checkbox' : 'radio');
+
+            if ($typeRender === 'radio' && $this->is_multiple) {
+                return 'checkbox';
+            }
+
+            if ($typeRender === 'checkbox' && !$this->is_multiple) {
+                return 'radio';
+            }
+
+            return $typeRender;
+        }
+
+        return $this->type_render;
     }
 
     /**

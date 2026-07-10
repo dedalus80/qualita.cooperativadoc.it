@@ -160,6 +160,15 @@ $(function(){
                         </label>
                     </div>
                 </div>
+                <div class="form-group type-render-group" style="display:none;">
+                    <label>Tipo visualizzazione risposte</label>
+                    <select name="sections[`+sectionIndex+`][questions][`+questionCount+`][type_render]" class="form-control question-render-select">
+                        <option value="radio">Radio (scelta singola)</option>
+                        <option value="checkbox">Checkbox (scelta multipla)</option>
+                        <option value="select">Select</option>
+                    </select>
+                    <small class="text-muted">Con Select puoi combinare scelta singola o multipla tramite la checkbox sopra.</small>
+                </div>
                 <div class="form-group custom-options-group" style="display:none;">
                     <label>Opzioni personalizzate</label>
                     <div class="input-group">
@@ -313,19 +322,50 @@ $(function(){
 
 // Copia/incolla qui anche il JS per mostrare/nascondere custom-options-group, aggiungere/rimuovere opzioni custom come in editFull.php
 $(function(){
-    // Mostra/nascondi campo custom options e multiple options in base al tipo
+    // Mostra/nascondi campo custom options, multiple options e type_render in base al tipo
     $(document).on('change', '.question-type-select', function(){
         var val = $(this).val();
         var questionBlock = $(this).closest('.question-block');
         var customGroup = questionBlock.find('.custom-options-group');
         var multipleGroup = questionBlock.find('.multiple-options-group');
-        
+        var renderGroup = questionBlock.find('.type-render-group');
+
         if(val === 'custom') {
             customGroup.show();
             multipleGroup.show();
+            renderGroup.show();
         } else {
             customGroup.hide();
             multipleGroup.hide();
+            renderGroup.hide();
+        }
+    });
+
+    // Sincronizza type_render e is_multiple per domande custom
+    $(document).on('change', '.question-render-select', function(){
+        var questionBlock = $(this).closest('.question-block');
+        var renderType = $(this).val();
+        var multipleCheckbox = questionBlock.find('input[name*="[is_multiple]"]');
+
+        if (renderType === 'radio') {
+            multipleCheckbox.prop('checked', false);
+        } else if (renderType === 'checkbox') {
+            multipleCheckbox.prop('checked', true);
+        }
+    });
+
+    $(document).on('change', 'input[name*="[is_multiple]"]', function(){
+        var questionBlock = $(this).closest('.question-block');
+        var renderSelect = questionBlock.find('.question-render-select');
+
+        if (!renderSelect.length || renderSelect.val() === 'select') {
+            return;
+        }
+
+        if ($(this).is(':checked')) {
+            renderSelect.val('checkbox');
+        } else {
+            renderSelect.val('radio');
         }
     });
     // Aggiungi opzione custom
@@ -360,19 +400,22 @@ $(function(){
         });
         ta.val(opts.join(`\n`));
     });
-    // Inizializza visibilità gruppi custom e multiple
+    // Inizializza visibilità gruppi custom, multiple e render
     $('.question-type-select').each(function(){
         var val = $(this).val();
         var questionBlock = $(this).closest('.question-block');
         var customGroup = questionBlock.find('.custom-options-group');
         var multipleGroup = questionBlock.find('.multiple-options-group');
-        
+        var renderGroup = questionBlock.find('.type-render-group');
+
         if(val === 'custom') {
             customGroup.show();
             multipleGroup.show();
+            renderGroup.show();
         } else {
             customGroup.hide();
             multipleGroup.hide();
+            renderGroup.hide();
         }
     });
 

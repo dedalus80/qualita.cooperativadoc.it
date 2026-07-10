@@ -652,6 +652,7 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
     } elseif ($question->type === 'yes_no') {
         $options = ['SI', 'NO'];
     }
+    $customTypeRender = $question->type === 'custom' ? $question->getResolvedTypeRender() : null;
     ?>
     <div class="question-item mb-4 p-3 border rounded" 
          <?php if ($question->isConditional()): ?>
@@ -684,6 +685,78 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
                         <?php endforeach; ?>
                     </div>
                     <div class="invalid-feedback text-center">Seleziona una risposta per questa domanda.</div>
+                <?php elseif ($question->type === 'custom'): ?>
+                    <?php if (empty($options)): ?>
+                        <p class="text-muted mb-0"><em>Nessuna opzione configurata per questa domanda.</em></p>
+                    <?php elseif ($customTypeRender === 'select'): ?>
+                        <select name="Answer[<?php echo $question->id; ?>]<?php echo $question->is_multiple ? '[]' : ''; ?>"
+                                class="form-select answer-select<?php echo $question->is_multiple ? ' multiple-select' : ''; ?>"
+                                <?php echo $question->is_multiple ? 'multiple' : ''; ?>
+                                required
+                                data-question-id="<?php echo $question->id; ?>">
+                            <?php if (!$question->is_multiple): ?>
+                                <option value="">-- seleziona --</option>
+                            <?php endif; ?>
+                            <?php foreach ($options as $option): ?>
+                                <option value="<?php echo CHtml::encode($option); ?>"><?php echo CHtml::encode($option); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="invalid-feedback text-center">
+                            <?php echo $question->is_multiple ? 'Seleziona almeno un\'opzione per questa domanda.' : 'Seleziona una risposta per questa domanda.'; ?>
+                        </div>
+                    <?php elseif ($customTypeRender === 'checkbox'): ?>
+                        <div class="row">
+                            <?php foreach ($options as $option): ?>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input multiple-checkbox" type="checkbox" name="Answer[<?php echo $question->id; ?>][]" value="<?php echo CHtml::encode($option); ?>" id="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>" data-question-id="<?php echo $question->id; ?>">
+                                        <label class="form-check-label" for="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>">
+                                            <?php echo CHtml::encode($option); ?>
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="invalid-feedback text-center">Seleziona almeno un'opzione per questa domanda.</div>
+                            </div>
+                        </div>
+                    <?php elseif (count($options) > 4): ?>
+                        <div class="row">
+                            <?php foreach ($options as $option): ?>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="Answer[<?php echo $question->id; ?>]" value="<?php echo CHtml::encode($option); ?>" id="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>" required>
+                                        <label class="form-check-label" for="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>">
+                                            <?php echo CHtml::encode($option); ?>
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="invalid-feedback text-center">Seleziona una risposta per questa domanda.</div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="row">
+                            <?php foreach ($options as $option): ?>
+                                <div class="col text-center">
+                                    <div class="form-check d-flex flex-column align-items-center justify-content-center h-100">
+                                        <label class="form-check-label mb-2 text-center w-100" for="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>"><?php echo CHtml::encode($option); ?></label>
+                                        <input class="form-check-input" type="radio" name="Answer[<?php echo $question->id; ?>]" value="<?php echo CHtml::encode($option); ?>" id="q<?php echo $question->id; ?>_<?php echo CHtml::encode($option); ?>" required style="margin-left: 0;">
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="invalid-feedback text-center">Seleziona una risposta per questa domanda.</div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 <?php elseif ($question->is_multiple): ?>
                     <div class="row">
                         <?php foreach ($options as $option): ?>
@@ -703,8 +776,8 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
                         </div>
                     </div>
                 <?php else: ?>
-                    <?php if ($question->type === 'custom' && count($options) > 4): ?>
-                        <!-- Layout orizzontale per domande custom con più di 4 opzioni -->
+                    <?php if (count($options) > 4): ?>
+                        <!-- Layout orizzontale per domande con più di 4 opzioni -->
                         <div class="row">
                             <?php foreach ($options as $option): ?>
                                 <div class="col-md-6 mb-2">
@@ -1120,23 +1193,29 @@ function executeRecaptcha() {
                 $('select[required]').each(function() {
                     var selectElement = $(this);
                     var fieldContainer = selectElement.closest('[data-field]');
-                    
-                    // Controlla solo se il campo è visibile (non nascosto dal tipo di questionario)
-                    if (fieldContainer.length === 0 || fieldContainer.is(':visible')) {
-                        var value = selectElement.val();
-                        var errorDiv = selectElement.siblings('.invalid-feedback');
-                        
+                    var questionItem = selectElement.closest('.question-item');
+                    var questionSection = questionItem.closest('[data-section-id]');
 
-                        
-                        if (!value || value === '') {
-
-                            errorDiv.addClass('d-block');
-                            hasErrors = true;
-                        } else {
-                            errorDiv.removeClass('d-block');
+                    if (questionItem.length > 0) {
+                        if (questionSection.length > 0 && !questionSection.is(':visible')) {
+                            return;
                         }
-                    } else {
+                        if (questionItem.attr('data-conditional') === 'true' && !questionItem.is(':visible')) {
+                            return;
+                        }
+                    } else if (fieldContainer.length > 0 && !fieldContainer.is(':visible')) {
+                        return;
+                    }
 
+                    var value = selectElement.val();
+                    var errorDiv = selectElement.siblings('.invalid-feedback');
+                    var isEmpty = !value || value === '' || (Array.isArray(value) && value.length === 0);
+
+                    if (isEmpty) {
+                        errorDiv.addClass('d-block');
+                        hasErrors = true;
+                    } else {
+                        errorDiv.removeClass('d-block');
                     }
                 });
                 
@@ -1305,14 +1384,17 @@ $(document).ready(function() {
         
         // Raccogli tutte le risposte attuali
         const answers = {};
-        $('input[type=\"radio\"]:checked, textarea[name^=\"Answer[\"]').each(function() {
+        $('input[type=\"radio\"]:checked, textarea[name^=\"Answer[\"], select.answer-select').each(function() {
             const name = $(this).attr('name');
-            const value = $(this).val();
+            let value = $(this).val();
             if (name && value) {
-                // Estrai l'ID della domanda dal nome (Answer[123] -> 123)
                 const match = name.match(/Answer\[(\d+)\]/);
                 if (match) {
-                    answers[match[1]] = value;
+                    if (Array.isArray(value)) {
+                        answers[match[1]] = value.join(',');
+                    } else {
+                        answers[match[1]] = value;
+                    }
                 }
             }
         });
@@ -1379,10 +1461,10 @@ $(document).ready(function() {
             // Mostra/nascondi la domanda condizionale
             if (shouldShow) {
                 questionElement.slideDown(300);
-                questionElement.find('input, textarea, .multiple-checkbox').prop('disabled', false);
+                questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', false);
             } else {
                 questionElement.slideUp(300);
-                questionElement.find('input, textarea, .multiple-checkbox').prop('disabled', true);
+                questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', true);
             }
         });
         
@@ -1390,7 +1472,7 @@ $(document).ready(function() {
     }
     
     // Event listener per i cambiamenti nelle risposte
-    $(document).on('change', 'input[type=\"radio\"], textarea[name^=\"Answer[\"], .multiple-checkbox', function() {
+    $(document).on('change', 'input[type=\"radio\"], textarea[name^=\"Answer[\"], .multiple-checkbox, select.answer-select', function() {
         updateConditionalQuestions();
     });
     

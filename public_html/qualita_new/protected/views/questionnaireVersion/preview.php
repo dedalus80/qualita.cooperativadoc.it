@@ -196,7 +196,15 @@ $this->breadcrumbs = array(
                         <?php elseif ($question->type == 'custom'): ?>
                             <?php
                             $customOptions = $question->options ? array_map(function($opt) { return $opt->option_text; }, $question->options) : [];
-                            if ($question->is_multiple):
+                            $customTypeRender = $question->getResolvedTypeRender();
+                            if ($customTypeRender === 'select'): ?>
+                                <select class="form-control" disabled>
+                                    <option>-- seleziona --</option>
+                                    <?php foreach ($customOptions as $opt): ?>
+                                        <option><?php echo CHtml::encode($opt); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php elseif ($customTypeRender === 'checkbox'):
                                 $selectedCustom = !empty($customOptions) ? array($customOptions[0]) : [];
                                 foreach ($customOptions as $opt): ?>
                                     <label class="checkbox-inline">

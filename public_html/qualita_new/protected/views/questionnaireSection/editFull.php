@@ -104,6 +104,7 @@ $this->breadcrumbs=array(
                                             <option value="option" <?php if($question->type=='option') echo 'selected'; ?>>Opzioni</option>
                                             <option value="range" <?php if($question->type=='range') echo 'selected'; ?>>Range 1-5</option>
                                             <option value="custom" <?php if($question->type=='custom') echo 'selected'; ?>>Custom (opzioni personalizzate)</option>
+                                            <option value="yes_no" <?php if($question->type=='yes_no') echo 'selected'; ?>>Sì / No</option>
                                         </select>
                                     </div>
                                     <?php if ($question->type == 'custom'): ?>
@@ -331,6 +332,7 @@ $(function(){
                         <option value="option">Opzioni</option>
                         <option value="range">Range 1-5</option>
                         <option value="custom">Custom (opzioni personalizzate)</option>
+                        <option value="yes_no">Sì / No</option>
                     </select>
                 </div>
                 <div class="form-group multiple-options-group" style="display:none;">

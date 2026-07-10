@@ -149,6 +149,7 @@ $(function(){
                         <option value="option">Opzioni</option>
                         <option value="range">Range 1-5</option>
                         <option value="custom">Custom (opzioni personalizzate)</option>
+                        <option value="yes_no">Sì / No</option>
                     </select>
                 </div>
                 <div class="form-group multiple-options-group" style="display:none;">

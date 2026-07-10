@@ -219,6 +219,8 @@ class QuestionnaireSectionController extends Controller
                                     $question->condition_operator = null;
                                     $question->condition_value = null;
                                 }
+
+                                $this->normalizeQuestionForSave($question);
                                 
                                 if (!$question->save())
                                     throw new Exception('Errore salvataggio domanda '.$question_id.': '.CJSON::encode($question->getErrors()));
@@ -282,6 +284,8 @@ class QuestionnaireSectionController extends Controller
                                     $question->condition_operator = null;
                                     $question->condition_value = null;
                                 }
+
+                                $this->normalizeQuestionForSave($question);
                                 
                                 if (!$question->save())
                                     throw new Exception('Errore salvataggio domanda: '.CJSON::encode($question->getErrors()));
@@ -335,6 +339,8 @@ class QuestionnaireSectionController extends Controller
                                 $question->condition_operator = null;
                                 $question->condition_value = null;
                             }
+
+                            $this->normalizeQuestionForSave($question);
                             
                             if (!$question->save())
                                 throw new Exception('Errore salvataggio nuova domanda: '.CJSON::encode($question->getErrors()));
@@ -407,6 +413,16 @@ class QuestionnaireSectionController extends Controller
         if ($model === null)
             throw new CHttpException(404, 'Sezione non trovata.');
         return $model;
+    }
+
+    /**
+     * Normalizza i campi della domanda in base al tipo prima del salvataggio.
+     */
+    private function normalizeQuestionForSave(Question $question)
+    {
+        if ($question->type === 'yes_no') {
+            $question->is_multiple = 0;
+        }
     }
 
     /**

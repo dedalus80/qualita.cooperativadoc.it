@@ -185,6 +185,14 @@ $this->breadcrumbs = array(
                             <?php endforeach; ?>
                             <p class="help-block"><small>1 = Poco soddisfatto, 5 = Estremamente soddisfatto</small></p>
 
+                        <?php elseif ($question->type == 'yes_no'): ?>
+                            <?php foreach (array('SI' => 'Sì', 'NO' => 'No') as $yesNoValue => $yesNoLabel): ?>
+                                <label class="radio-inline">
+                                    <input type="radio" name="preview_yes_no_<?php echo $question->id; ?>" disabled>
+                                    <?php echo $yesNoLabel; ?>
+                                </label>
+                            <?php endforeach; ?>
+
                         <?php elseif ($question->type == 'custom'): ?>
                             <?php
                             $customOptions = $question->options ? array_map(function($opt) { return $opt->option_text; }, $question->options) : [];

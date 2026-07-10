@@ -16,7 +16,7 @@ class Question extends CActiveRecord
         return array(
             array('section_id, text, type', 'required'),
             array('section_id, order, condition_question_id', 'numerical', 'integerOnly'=>true),
-            array('type', 'in', 'range'=>array('text','option','range','custom')),
+            array('type', 'in', 'range'=>array('text','option','range','custom','yes_no')),
             array('condition_operator', 'in', 'range'=>array('=', '!=', 'in', 'not in')),
             array('condition_value', 'length', 'max'=>255),
             array('is_multiple', 'boolean'),

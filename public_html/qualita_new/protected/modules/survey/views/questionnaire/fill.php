@@ -649,6 +649,8 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
         $options = [1, 2, 3, 4, 5];
     } elseif ($question->type === 'custom') {
         $options = $question->options ? array_map(function($opt) { return $opt->option_text; }, $question->options) : [];
+    } elseif ($question->type === 'yes_no') {
+        $options = ['SI', 'NO'];
     }
     ?>
     <div class="question-item mb-4 p-3 border rounded" 
@@ -670,6 +672,18 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
                 <?php if ($question->type === 'text'): ?>
                     <textarea type="text" name="Answer[<?php echo $question->id; ?>]" class="form-control" rows="2" placeholder="Inserisci la tua risposta..." required></textarea>
                     <div class="invalid-feedback text-center">Inserisci una risposta per questa domanda.</div>
+                <?php elseif ($question->type === 'yes_no'): ?>
+                    <div class="d-flex flex-wrap gap-3">
+                        <?php foreach (array('SI' => 'Sì', 'NO' => 'No') as $yesNoValue => $yesNoLabel): ?>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="Answer[<?php echo $question->id; ?>]" value="<?php echo $yesNoValue; ?>" id="q<?php echo $question->id; ?>_<?php echo $yesNoValue; ?>" required>
+                                <label class="form-check-label" for="q<?php echo $question->id; ?>_<?php echo $yesNoValue; ?>">
+                                    <?php echo $yesNoLabel; ?>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="invalid-feedback text-center">Seleziona una risposta per questa domanda.</div>
                 <?php elseif ($question->is_multiple): ?>
                     <div class="row">
                         <?php foreach ($options as $option): ?>

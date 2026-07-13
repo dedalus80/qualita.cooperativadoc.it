@@ -5,6 +5,22 @@ $this->breadcrumbs=array(
     'Versione '.$version->version_number=>array('questionnaireVersion/view','id'=>$version->id),
     'Modifica Sezioni e Domande',
 );
+
+$catalog = isset($catalog) ? $catalog : VisibilityRulesHelper::buildCatalogForVersion($version);
+$ruleValueUrl = Yii::app()->createUrl('questionnaireSection/getRuleValueOptions', array('version_id' => $version->id));
+
+Yii::app()->clientScript->registerScriptFile(
+    Yii::app()->baseUrl . '/js/visibility-rules-builder.js',
+    CClientScript::POS_END
+);
+Yii::app()->clientScript->registerScript(
+    'visibilityRulesInit',
+    'VisibilityRulesBuilder.init(' . CJSON::encode(array(
+        'catalog' => $catalog,
+        'ruleValueUrl' => $ruleValueUrl,
+    )) . ');',
+    CClientScript::POS_READY
+);
 ?>
 
 <div class="page-header">
@@ -47,39 +63,18 @@ $this->breadcrumbs=array(
                     </div>
                     
                     <h4 style="margin-top: 20px; margin-bottom: 15px; color: #337ab7; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                        <i class="fa fa-filter"></i> Mostra con queste condizioni
+                        <i class="fa fa-filter"></i> Visibilità sezione
                     </h4>
-                    
-                    <div class="form-group">
-                        <label>Campo Condizione</label>
-                        <select name="sections[<?php echo $section->id; ?>][condition_field]" class="form-control condition-field-select">
-                            <option value="">-- nessuno --</option>
-                            <option value="tipologia_id" <?php if($section->condition_field=='tipologia_id') echo 'selected'; ?>>Tipologia Soggiorno</option>
-                            <!--<option value="centro" <?php if($section->condition_field=='centro') echo 'selected'; ?>>Centro/Soggiorno</option>
-                            <option value="ente" <?php if($section->condition_field=='ente') echo 'selected'; ?>>Cliente/Ente</option>
-                            <option value="anno" <?php if($section->condition_field=='anno') echo 'selected'; ?>>Anno</option>
-                            <option value="eta" <?php if($section->condition_field=='eta') echo 'selected'; ?>>Età</option>
-                            <option value="organizzatore" <?php if($section->condition_field=='organizzatore') echo 'selected'; ?>>Organizzatore</option>
-                            <option value="soggiorno" <?php if($section->condition_field=='soggiorno') echo 'selected'; ?>>Soggiorno</option>
-                            <option value="turno" <?php if($section->condition_field=='turno') echo 'selected'; ?>>Turno</option>-->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Operatore Condizione</label>
-                        <select name="sections[<?php echo $section->id; ?>][condition_operator]" class="form-control">
-                            <option value="">-- nessuno --</option>
-                            <option value="=" <?php if($section->condition_operator=='=') echo 'selected'; ?>>=</option>
-                            <option value="!=" <?php if($section->condition_operator=='!=') echo 'selected'; ?>>!=</option>
-                            <option value="in" <?php if($section->condition_operator=='in') echo 'selected'; ?>>IN</option>
-                            <option value="not in" <?php if($section->condition_operator=='not in') echo 'selected'; ?>>NOT IN</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Valore Condizione</label>
-                        <div class="condition-value-container">
-                            <input type="text" name="sections[<?php echo $section->id; ?>][condition_value]" class="form-control condition-value-input" placeholder="es. 3 o 1,2,5" value="<?php echo CHtml::encode($section->condition_value); ?>">
-                        </div>
-                    </div>
+
+                    <?php $this->renderPartial('_visibilityRulesWidget', array(
+                        'inputName' => 'sections[' . $section->id . '][visibility_ruleset]',
+                        'targetType' => 'section',
+                        'entityKey' => 'section-' . $section->id,
+                        'rulesetData' => $section->getVisibilityRulesetData(),
+                        'excludeQuestionId' => null,
+                        'catalog' => $catalog,
+                        'checkboxLabel' => 'Abilita condizioni per mostrare questa sezione',
+                    )); ?>
 
                     <h4 style="margin-top: 20px; margin-bottom: 15px; color: #5cb85c; border-bottom: 1px solid #eee; padding-bottom: 5px;">
                         <i class="fa fa-list"></i> Domande della sezione
@@ -157,50 +152,16 @@ $this->breadcrumbs=array(
                                         <input type="number" name="sections[<?php echo $section->id; ?>][questions][<?php echo $question->id; ?>][order]" class="form-control question-order" value="<?php echo $question->order; ?>" required>
                                     </div>
 
-                                    <!-- Campi condizionali -->
-                                    <div class="form-group">
-                                        <label>Domanda Condizionale</label>
-                                        <div class="checkbox">
-                                            <label>
-                                                <input type="checkbox" class="enable-conditional-checkbox" data-question-id="<?php echo $question->id; ?>" <?php echo $question->isConditional() ? 'checked' : ''; ?>>
-                                                Abilita condizioni per mostrare questa domanda
-                                            </label>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="conditional-fields-group" data-question-id="<?php echo $question->id; ?>" style="display: <?php echo $question->isConditional() ? 'block' : 'none'; ?>;">
-                                        <div class="form-group">
-                                            <label>Domanda Condizione</label>
-                                            <select name="sections[<?php echo $section->id; ?>][questions][<?php echo $question->id; ?>][condition_question_id]" class="form-control">
-                                                <option value="">Seleziona la domanda condizione</option>
-                                                <?php foreach ($section->questions as $otherQuestion): ?>
-                                                    <?php if ($otherQuestion->id != $question->id): ?>
-                                                        <option value="<?php echo $otherQuestion->id; ?>" <?php echo ($question->condition_question_id == $otherQuestion->id) ? 'selected="selected"' : ''; ?>>
-                                                            <?php echo CHtml::encode($otherQuestion->text); ?>
-                                                        </option>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Operatore</label>
-                                            <select name="sections[<?php echo $section->id; ?>][questions][<?php echo $question->id; ?>][condition_operator]" class="form-control">
-                                                <option value="">-- nessuno --</option>
-                                                <option value="=" <?php echo ($question->condition_operator == '=') ? 'selected' : ''; ?>>=</option>
-                                                <option value="!=" <?php echo ($question->condition_operator == '!=') ? 'selected' : ''; ?>>!=</option>
-                                                <option value="in" <?php echo ($question->condition_operator == 'in') ? 'selected' : ''; ?>>IN</option>
-                                                <option value="not in" <?php echo ($question->condition_operator == 'not in') ? 'selected' : ''; ?>>NOT IN</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Valore Condizione</label>
-                                            <input type="text" name="sections[<?php echo $section->id; ?>][questions][<?php echo $question->id; ?>][condition_value]" class="form-control" value="<?php echo CHtml::encode($question->condition_value); ?>" placeholder="Inserisci il valore o valori separati da virgola">
-                                            <small class="text-muted">Per operatori "in" e "not in", separa i valori con virgole (es: "valore1,valore2")</small>
-                                        </div>
-                                    </div>
+                                    <!-- Condizioni di visibilità -->
+                                    <?php $this->renderPartial('_visibilityRulesWidget', array(
+                                        'inputName' => 'sections[' . $section->id . '][questions][' . $question->id . '][visibility_ruleset]',
+                                        'targetType' => 'question',
+                                        'entityKey' => 'question-' . $question->id,
+                                        'rulesetData' => $question->getVisibilityRulesetData(),
+                                        'excludeQuestionId' => $question->id,
+                                        'catalog' => $catalog,
+                                        'checkboxLabel' => 'Abilita condizioni per mostrare questa domanda',
+                                    )); ?>
                                     <?php if (!$hasResponses): ?>
                                     <div class="form-group">
                                         <button type="button" class="btn btn-danger delete-question-btn">
@@ -235,9 +196,14 @@ $this->breadcrumbs=array(
     </div>
 </form>
 
+<?php $this->renderPartial('_visibilityRulesDialog'); ?>
+
 <?php
+$emptyRulesetJson = CJSON::encode(VisibilityRulesHelper::emptyRuleset());
 Yii::app()->clientScript->registerScript('editFullScript', <<<JS
 $(function(){
+    var emptyRulesetJson = {$emptyRulesetJson};
+
     // Aggiungi nuova sezione
     $('#add-section-btn').click(function(){
         let sectionCount = $('.section-block').length + 1;
@@ -264,38 +230,25 @@ $(function(){
                 </div>
                 
                 <h4 style="margin-top: 20px; margin-bottom: 15px; color: #337ab7; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                    <i class="fa fa-filter"></i> Mostra con queste condizioni
+                    <i class="fa fa-filter"></i> Visibilità sezione
                 </h4>
-                
-                <div class="form-group">
-                    <label>Campo Condizione</label>
-                    <select name="new_sections[`+newSectionId+`][condition_field]" class="form-control condition-field-select">
-                        <option value="">-- nessuno --</option>
-                        <option value="tipologia_id">Tipologia Soggiorno</option>
-                        <!--<option value="centro">Centro/Soggiorno</option>
-                        <option value="ente">Cliente/Ente</option>
-                        <option value="anno">Anno</option>
-                        <option value="eta">Età</option>
-                        <option value="organizzatore">Organizzatore</option>
-                        <option value="soggiorno">Soggiorno</option>
-                        <option value="turno">Turno</option>-->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Operatore Condizione</label>
-                    <select name="new_sections[`+newSectionId+`][condition_operator]" class="form-control">
-                        <option value="">-- nessuno --</option>
-                        <option value="=">=</option>
-                        <option value="!=">!=</option>
-                        <option value="in">IN</option>
-                        <option value="not in">NOT IN</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Valore Condizione</label>
-                    <div class="condition-value-container">
-                        <input type="text" name="new_sections[`+newSectionId+`][condition_value]" class="form-control condition-value-input" placeholder="es. 3 o 1,2,5">
+                <div class="visibility-rules-widget"
+                     data-entity-key="section-`+newSectionId+`"
+                     data-target-type="section">
+                    <div class="checkbox" style="margin-bottom: 5px;">
+                        <label>
+                            <input type="checkbox" class="visibility-rules-enable-checkbox">
+                            Abilita condizioni per mostrare questa sezione
+                        </label>
                     </div>
+                    <div class="visibility-rules-summary text-muted small" style="display:none;">
+                        <i class="fa fa-filter"></i>
+                        <span class="visibility-rules-summary-text"></span>
+                    </div>
+                    <input type="hidden"
+                           name="new_sections[`+newSectionId+`][visibility_ruleset]"
+                           class="visibility-rules-json-input"
+                           value='`+JSON.stringify(emptyRulesetJson)+`'>
                 </div>
 
                 <h4 style="margin-top: 20px; margin-bottom: 15px; color: #5cb85c; border-bottom: 1px solid #eee; padding-bottom: 5px;">
@@ -330,7 +283,7 @@ $(function(){
             `new_questions[`+sectionId+`][`+questionCount+`]`;
 
         let html = `
-        <div class="panel panel-success question-block">
+        <div class="panel panel-success question-block" data-id="new-`+sectionId+`-`+questionCount+`">
             <div class="panel-heading">
                 <h4 class="panel-title">Nuova Domanda #`+questionCount+`</h4>
             </div>
@@ -380,45 +333,27 @@ $(function(){
                 </div>
                 <div class="form-group">
                     <label>Ordine</label>
-                    <input type="number" name="`+inputPrefix+`[order]" class="form-control" value="`+questionCount+`" required>
+                    <input type="number" name="`+inputPrefix+`[order]" class="form-control question-order" value="`+questionCount+`" required>
                 </div>
 
-                <!-- Campi condizionali per nuove domande -->
-                <div class="form-group">
-                    <label>Domanda Condizionale</label>
-                    <div class="checkbox">
+                <!-- Condizioni di visibilità -->
+                <div class="visibility-rules-widget"
+                     data-entity-key="question-new-`+sectionId+`-`+questionCount+`"
+                     data-target-type="question">
+                    <div class="checkbox" style="margin-bottom: 5px;">
                         <label>
-                            <input type="checkbox" class="enable-conditional-checkbox">
+                            <input type="checkbox" class="visibility-rules-enable-checkbox">
                             Abilita condizioni per mostrare questa domanda
                         </label>
                     </div>
-                </div>
-
-                <div class="conditional-fields-group" style="display:none;">
-                    <div class="form-group">
-                        <label>Domanda Condizione</label>
-                        <select name="`+inputPrefix+`[condition_question_id]" class="form-control">
-                            <option value="">Seleziona la domanda condizione</option>
-                            <!-- Le opzioni verranno popolate dinamicamente -->
-                        </select>
+                    <div class="visibility-rules-summary text-muted small" style="display:none;">
+                        <i class="fa fa-filter"></i>
+                        <span class="visibility-rules-summary-text"></span>
                     </div>
-
-                    <div class="form-group">
-                        <label>Operatore</label>
-                        <select name="`+inputPrefix+`[condition_operator]" class="form-control">
-                            <option value="">Seleziona operatore</option>
-                            <option value="=">Uguale a</option>
-                            <option value="!=">Diverso da</option>
-                            <option value="in">Contenuto in</option>
-                            <option value="not in">Non contenuto in</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Valore Condizione</label>
-                        <input type="text" name="`+inputPrefix+`[condition_value]" class="form-control" placeholder="Inserisci il valore o valori separati da virgola">
-                        <small class="text-muted">Per operatori "in" e "not in", separa i valori con virgole (es: "valore1,valore2")</small>
-                    </div>
+                    <input type="hidden"
+                           name="`+inputPrefix+`[visibility_ruleset]"
+                           class="visibility-rules-json-input"
+                           value='`+JSON.stringify(emptyRulesetJson)+`'>
                 </div>
             </div>
         </div>`;
@@ -519,51 +454,6 @@ $(function(){
         });
     });
 
-    // Gestione select dinamiche per condition_field
-    $(document).on('change', '.condition-field-select', function(){
-        let field = $(this).val();
-        let container = $(this).closest('.section-block').find('.condition-value-container');
-        let currentValue = container.find('.condition-value-input').val();
-        
-        if (field) {
-            $.ajax({
-                url: '{$this->createUrl('questionnaireSection/getConditionValues')}',
-                type: 'GET',
-                data: { field: field },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.type === 'select') {
-                        let selectHtml = '<select name="' + container.find('.condition-value-input').attr('name') + '" class="form-control condition-value-select">';
-                        selectHtml += '<option value="">-- seleziona --</option>';
-                        $.each(response.values, function(value, label) {
-                            let selected = (value == currentValue) ? 'selected' : '';
-                            selectHtml += '<option value="' + value + '" ' + selected + '>' + label + '</option>';
-                        });
-                        selectHtml += '</select>';
-                        container.html(selectHtml);
-                    } else {
-                        let inputHtml = '<input type="text" name="' + container.find('.condition-value-input').attr('name') + '" class="form-control condition-value-input" placeholder="' + response.placeholder + '" value="' + currentValue + '">';
-                        container.html(inputHtml);
-                    }
-                },
-                error: function() {
-                    console.log('Errore nel caricamento dei valori per il campo: ' + field);
-                }
-            });
-        } else {
-            // Reset a input text vuoto
-            let inputHtml = '<input type="text" name="' + container.find('.condition-value-input').attr('name') + '" class="form-control condition-value-input" placeholder="es. 3 o 1,2,5" value="">';
-            container.html(inputHtml);
-        }
-    });
-
-    // Inizializza le select per le sezioni esistenti che hanno già un valore
-    $('.condition-field-select').each(function(){
-        if ($(this).val()) {
-            $(this).trigger('change');
-        }
-    });
-
     // Mostra/nascondi campo custom options e multiple options in base al tipo
     $(document).on('change', '.question-type-select', function(){
         var val = $(this).val();
@@ -661,59 +551,6 @@ $(function(){
         }
     });
 
-    // Gestione campi condizionali
-    $(document).on('change', '.enable-conditional-checkbox', function(){
-        var questionBlock = $(this).closest('.question-block');
-        var conditionalFields = questionBlock.find('.conditional-fields-group');
-        
-        if ($(this).is(':checked')) {
-            conditionalFields.show();
-            // Popola le opzioni della domanda condizione
-            populateConditionQuestionOptions(questionBlock);
-        } else {
-            conditionalFields.hide();
-            // Pulisci i campi quando si disabilita
-            conditionalFields.find('select, input').val('');
-        }
-    });
-
-    // Funzione per popolare le opzioni della domanda condizione
-    function populateConditionQuestionOptions(questionBlock) {
-        var sectionBlock = questionBlock.closest('.section-block');
-        var conditionSelect = questionBlock.find('select[name*="[condition_question_id]"]');
-        var currentQuestionId = questionBlock.data('id');
-        
-        // Salva il valore attualmente selezionato
-        var selectedValue = conditionSelect.val();
-        
-        // Pulisci le opzioni esistenti
-        conditionSelect.find('option:not(:first)').remove();
-        
-        // Aggiungi le domande della stessa sezione (escludendo la corrente)
-        sectionBlock.find('.question-block').each(function(){
-            var otherQuestionId = $(this).data('id');
-            if (otherQuestionId && otherQuestionId != currentQuestionId) {
-                var questionText = $(this).find('input[name*="[text]"]').val() || 
-                                 $(this).find('label:contains("Testo Domanda")').next().find('input').val() ||
-                                 'Domanda #' + otherQuestionId;
-                var option = $('<option value="' + otherQuestionId + '">' + questionText + '</option>');
-                
-                // Se questo era il valore selezionato, ripristinalo
-                if (otherQuestionId == selectedValue) {
-                    option.prop('selected', true);
-                }
-                
-                conditionSelect.append(option);
-            }
-        });
-    }
-
-    // Inizializza i campi condizionali esistenti
-    $('.enable-conditional-checkbox:checked').each(function(){
-        var questionBlock = $(this).closest('.question-block');
-        populateConditionQuestionOptions(questionBlock);
-    });
-    
     // Inizializza i numeri delle domande al caricamento della pagina
     $('.section-block').each(function(){
         updateQuestionNumbers($(this));

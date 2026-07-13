@@ -183,7 +183,8 @@ class QuestionnaireController extends CController
                 }
 
                 if ($isValid && $participant->save(false)) {
-                        foreach ($_POST['Answer'] as $questionId => $value) {
+                        $answersToSave = $this->filterSubmittedAnswers($_POST['Answer'], $sections, $participant);
+                        foreach ($answersToSave as $questionId => $value) {
                             $answer = new Answer();
                             $answer->setAttribute('participant_id', $participant->id);
                             $answer->setAttribute('question_id', $questionId);
@@ -251,6 +252,63 @@ class QuestionnaireController extends CController
     }
 
     /**
+     * Filtra le risposte inviate mantenendo solo domande visibili.
+     *
+     * @param array $submittedAnswers
+     * @param QuestionnaireSection[] $sections
+     * @param QuestionnaireParticipant $participant
+     * @return array
+     */
+    private function filterSubmittedAnswers(array $submittedAnswers, array $sections, QuestionnaireParticipant $participant)
+    {
+        $participantContext = array(
+            'tipologia_soggiorno_id' => $participant->tipologia_soggiorno_id,
+            'tipologia_id' => $participant->tipologia_soggiorno_id,
+            'soggiorno_id' => $participant->soggiorno_id,
+            'age' => $participant->age,
+            'eta' => $participant->age,
+            'turno_id' => $participant->turno_id,
+            'anno' => date('Y'),
+        );
+
+        $answers = array();
+        foreach ($submittedAnswers as $questionId => $value) {
+            $answers[$questionId] = is_array($value) ? implode(',', $value) : $value;
+        }
+
+        $filtered = array();
+        foreach ($sections as $section) {
+            $sectionRuleset = $section->getVisibilityRulesetData();
+            $sectionVisible = VisibilityRulesEvaluator::evaluate($sectionRuleset, array(
+                'participant' => $participantContext,
+                'answers' => $answers,
+            ));
+
+            if (!$sectionVisible) {
+                continue;
+            }
+
+            foreach ($section->questions as $question) {
+                if (!array_key_exists($question->id, $submittedAnswers)) {
+                    continue;
+                }
+
+                $questionRuleset = $question->getVisibilityRulesetData();
+                $questionVisible = VisibilityRulesEvaluator::evaluate($questionRuleset, array(
+                    'participant' => $participantContext,
+                    'answers' => $answers,
+                ));
+
+                if ($questionVisible) {
+                    $filtered[$question->id] = $submittedAnswers[$question->id];
+                }
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
      * Filtra le sezioni in base alle condizioni definite
      * @param QuestionnaireSection[] $sections
      * @param QuestionnaireParticipant $participant
@@ -261,8 +319,8 @@ class QuestionnaireController extends CController
         $filteredSections = [];
         
         foreach ($sections as $section) {
-            // Se non ci sono condizioni, mostra sempre la sezione
-            if (empty($section->condition_field) || empty($section->condition_operator)) {
+            $ruleset = $section->getVisibilityRulesetData();
+            if (empty($ruleset['enabled'])) {
                 $filteredSections[] = $section;
                 continue;
             }
@@ -284,35 +342,21 @@ class QuestionnaireController extends CController
      */
     private function evaluateCondition($section, $participant)
     {
-        $field = $section->condition_field;
-        $operator = $section->condition_operator;
-        $expectedValue = $section->condition_value;
+        $ruleset = $section->getVisibilityRulesetData();
+        $participantContext = array(
+            'tipologia_soggiorno_id' => $participant->tipologia_soggiorno_id,
+            'tipologia_id' => $participant->tipologia_soggiorno_id,
+            'soggiorno_id' => $participant->soggiorno_id,
+            'age' => $participant->age,
+            'eta' => $participant->age,
+            'turno_id' => $participant->turno_id,
+            'anno' => date('Y'),
+        );
 
-        // Ottieni il valore del campo dal partecipante
-        $actualValue = $this->getParticipantFieldValue($participant, $field);
-        
-        if ($actualValue === null) {
-            return false; // Campo non trovato o non valorizzato
-        }
-
-        switch ($operator) {
-            case '=':
-                return $actualValue == $expectedValue;
-                
-            case '!=':
-                return $actualValue != $expectedValue;
-                
-            case 'in':
-                $expectedValues = explode(',', $expectedValue);
-                return in_array($actualValue, $expectedValues);
-                
-            case 'not in':
-                $expectedValues = explode(',', $expectedValue);
-                return !in_array($actualValue, $expectedValues);
-                
-            default:
-                return true; // Operatore non riconosciuto, mostra la sezione
-        }
+        return VisibilityRulesEvaluator::evaluate($ruleset, array(
+            'participant' => $participantContext,
+            'answers' => array(),
+        ));
     }
 
     /**
@@ -364,13 +408,12 @@ class QuestionnaireController extends CController
         $conditions = [];
         
         foreach ($sections as $section) {
-            if (!empty($section->condition_field) && !empty($section->condition_operator)) {
-                $conditions[] = [
+            $ruleset = $section->getVisibilityRulesetData();
+            if (!empty($ruleset['enabled'])) {
+                $conditions[] = array(
                     'sectionId' => $section->id,
-                    'field' => $section->condition_field,
-                    'operator' => $section->condition_operator,
-                    'value' => $section->condition_value
-                ];
+                    'ruleset' => $ruleset,
+                );
             }
         }
         

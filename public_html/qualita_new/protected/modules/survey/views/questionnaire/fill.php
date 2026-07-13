@@ -625,13 +625,14 @@ body, html {
 <?php foreach ($sections as $sectionIndex => $section): ?>
 <?php
 // Determina se la sezione deve essere nascosta inizialmente
-$initiallyHidden = false;
-if (!empty($section->condition_field) && !empty($section->condition_operator)) {
-    // Per ora nascondiamo tutte le sezioni condizionali, il JavaScript le mostrerà se necessario
-    $initiallyHidden = true;
-}
+$sectionRuleset = $section->getVisibilityRulesetData();
+$initiallyHidden = !empty($sectionRuleset['enabled']);
 ?>
-<div class="row g-3" data-section-id="<?php echo $section->id; ?>" <?php echo $initiallyHidden ? 'style="display: none;"' : ''; ?>>
+<div class="row g-3" data-section-id="<?php echo $section->id; ?>"
+     <?php if (!empty($sectionRuleset['enabled'])): ?>
+     data-visibility-rules="<?php echo CHtml::encode(CJSON::encode($sectionRuleset)); ?>"
+     <?php endif; ?>
+     <?php echo $initiallyHidden ? 'style="display: none;"' : ''; ?>>
     <div class="col-lg-12">
         <div class="card mb-4">
             <div class="card-header section-title">
@@ -653,13 +654,11 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
         $options = ['SI', 'NO'];
     }
     $customTypeRender = $question->type === 'custom' ? $question->getResolvedTypeRender() : null;
+    $questionRuleset = $question->getVisibilityRulesetData();
     ?>
     <div class="question-item mb-4 p-3 border rounded" 
-         <?php if ($question->isConditional()): ?>
-         data-conditional="true" 
-         data-condition-question="<?php echo $question->condition_question_id; ?>" 
-         data-condition-operator="<?php echo CHtml::encode($question->condition_operator); ?>" 
-         data-condition-value="<?php echo CHtml::encode($question->condition_value); ?>"
+         <?php if (!empty($questionRuleset['enabled'])): ?>
+         data-visibility-rules="<?php echo CHtml::encode(CJSON::encode($questionRuleset)); ?>"
          style="display: none;"
          <?php endif; ?>>
         <div class="row align-items-center">
@@ -848,20 +847,26 @@ if (!empty($section->condition_field) && !empty($section->condition_operator)) {
 <?php echo CHtml::endForm(); ?>
 
 <?php
-// Genera le condizioni delle sezioni per il JavaScript
+Yii::app()->clientScript->registerScriptFile(
+    Yii::app()->baseUrl . '/js/visibility-rules-evaluator.js',
+    CClientScript::POS_END
+);
+
+// Genera le condizioni delle sezioni per il JavaScript (formato legacy compatibile)
 $sectionConditions = [];
 foreach ($sections as $section) {
-    if (!empty($section->condition_field) && !empty($section->condition_operator)) {
-        $sectionConditions[] = [
+    $ruleset = $section->getVisibilityRulesetData();
+    if (!empty($ruleset['enabled'])) {
+        $sectionConditions[] = array(
             'sectionId' => $section->id,
-            'field' => $section->condition_field,
-            'operator' => $section->condition_operator,
-            'value' => $section->condition_value
-        ];
+            'ruleset' => $ruleset,
+        );
     }
 }
 
 
+
+$staysUrl = Yii::app()->createUrl('/survey/default/stays');
 
 $jsCode = "
 
@@ -962,82 +967,125 @@ function updateFieldVisibility() {
 
 }
 
-// Funzione per valutare le condizioni
-function evaluateCondition(condition, participantData) {
-    if (!condition.field || !condition.operator) {
-        return true; // Nessuna condizione, mostra sempre
-    }
-
-    const actualValue = participantData[condition.field];
-    const expectedValue = condition.value;
-
-    
-
-    // Se il valore attuale è vuoto, non mostrare la sezione (per evitare sezioni vuote)
-    if (actualValue === undefined || actualValue === null || actualValue === '') {
-
-        return false;
-    }
-
-    let result = false;
-    switch (condition.operator) {
-        case '=':
-            result = actualValue == expectedValue;
-            break;
-        case '!=':
-            result = actualValue != expectedValue;
-            break;
-        case 'in':
-            const expectedValues = expectedValue.split(',');
-            result = expectedValues.includes(actualValue.toString());
-            break;
-        case 'not in':
-            const notExpectedValues = expectedValue.split(',');
-            result = !notExpectedValues.includes(actualValue.toString());
-            break;
-        default:
-            result = true;
-    }
-
-    
-    return result;
+// Funzione per valutare le condizioni (ruleset)
+function evaluateVisibilityRuleset(ruleset, context) {
+    return VisibilityRulesEvaluator.evaluate(ruleset, context);
 }
 
 // Funzione per aggiornare la visibilità delle sezioni
 function updateSectionVisibility() {
     const participantData = {
+        tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
         tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
+        soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
         centro: $('#QuestionnaireParticipant_soggiorno_id').val(),
+        age: $('#QuestionnaireParticipant_age').val(),
         eta: $('#QuestionnaireParticipant_age').val(),
         soggiorno: $('#QuestionnaireParticipant_soggiorno_id').val(),
+        turno_id: $('#QuestionnaireParticipant_turno_id').val(),
         turno: $('#QuestionnaireParticipant_turno_id').val(),
         anno: new Date().getFullYear().toString()
     };
 
-
+    const answers = collectCurrentAnswers();
 
     sectionConditions.forEach(condition => {
+        const sectionElement = $('[data-section-id=' + condition.sectionId + ']');
+        if (!sectionElement.length) {
+            return;
+        }
 
-        const sectionElement = $('[data-section-id=\"' + condition.sectionId + '\"]');
+        const shouldShow = evaluateVisibilityRuleset(condition.ruleset, {
+            participant: participantData,
+            answers: answers
+        });
 
-        
-        if (sectionElement.length) {
-            const shouldShow = evaluateCondition(condition, participantData);
-
-            if (shouldShow) {
-
-                sectionElement.slideDown(300).fadeIn(300);
-                sectionElement.find(':input').prop('disabled', false).fadeIn(200);
-            } else {
-
-                sectionElement.slideUp(300).fadeOut(300);
-                sectionElement.find(':input').prop('disabled', true).fadeOut(200);
-            }
+        if (shouldShow) {
+            sectionElement.slideDown(300).fadeIn(300);
+            sectionElement.find(':input').prop('disabled', false).fadeIn(200);
         } else {
-            // Sezione non trovata nel DOM
+            sectionElement.slideUp(300).fadeOut(300);
+            sectionElement.find(':input').prop('disabled', true).fadeOut(200);
+        }
+    });
+}
+
+function collectCurrentAnswers() {
+    const answers = {};
+
+    $('input[type=\"radio\"]:checked').each(function() {
+        const name = $(this).attr('name');
+        if (name && name.indexOf('Answer[') === 0) {
+            const questionId = name.match(/Answer\[(\d+)\]/);
+            if (questionId) {
+                answers[questionId[1]] = $(this).val();
+            }
         }
     });
 
+    $('textarea[name^=\"Answer[\"]').each(function() {
+        const name = $(this).attr('name');
+        const questionId = name.match(/Answer\[(\d+)\]/);
+        if (questionId && $(this).val()) {
+            answers[questionId[1]] = $(this).val();
+        }
+    });
+
+    $('select.answer-select').each(function() {
+        const questionId = $(this).data('question-id') || $(this).attr('name').match(/Answer\[(\d+)\]/)[1];
+        if (!questionId) {
+            return;
+        }
+        if ($(this).prop('multiple')) {
+            const values = $(this).val();
+            if (values && values.length) {
+                answers[questionId] = values.join(',');
+            }
+        } else if ($(this).val()) {
+            answers[questionId] = $(this).val();
+        }
+    });
+
+    $('.multiple-checkbox:checked').each(function() {
+        const questionId = $(this).attr('data-question-id');
+        const value = $(this).val();
+        if (questionId && value) {
+            if (answers[questionId]) {
+                answers[questionId] += ',' + value;
+            } else {
+                answers[questionId] = value;
+            }
+        }
+    });
+
+    return answers;
+}
+
+function isQuestionVisible(questionItem) {
+    if (!questionItem.attr('data-visibility-rules')) {
+        return true;
+    }
+
+    let ruleset;
+    try {
+        ruleset = JSON.parse(questionItem.attr('data-visibility-rules'));
+    } catch (e) {
+        return true;
+    }
+
+    const participantData = {
+        tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
+        tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
+        soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
+        age: $('#QuestionnaireParticipant_age').val(),
+        eta: $('#QuestionnaireParticipant_age').val(),
+        anno: new Date().getFullYear().toString()
+    };
+
+    return evaluateVisibilityRuleset(ruleset, {
+        participant: participantData,
+        answers: collectCurrentAnswers()
+    });
 }
 
 // Funzione getStays (globale)
@@ -1053,7 +1101,7 @@ function getStays(t) {
         return;
     }
 
-    $.post('/qualita_new/index.php/survey/default/stays',{'c':c,'t':t},function(data) {
+    $.post('" . $staysUrl . "',{'c':c,'t':t},function(data) {
         $('#QuestionnaireParticipant_soggiorno_id option:gt(0)').remove();
         $('#QuestionnaireParticipant_soggiorno_id').append(data);
     }, 'html');
@@ -1122,7 +1170,7 @@ function executeRecaptcha() {
                         }
                         
                         // Salta la validazione se la domanda condizionale è nascosta
-                        if (questionItem.attr('data-conditional') === 'true' && !questionItem.is(':visible')) {
+                        if (questionItem.attr('data-visibility-rules') && !isQuestionVisible(questionItem)) {
             
                             return;
                         }
@@ -1163,7 +1211,7 @@ function executeRecaptcha() {
                         }
                         
                         // Salta la validazione se la domanda condizionale è nascosta
-                        if (questionItem.attr('data-conditional') === 'true' && !questionItem.is(':visible')) {
+                        if (questionItem.attr('data-visibility-rules') && !isQuestionVisible(questionItem)) {
             
                             return;
                         }
@@ -1200,7 +1248,7 @@ function executeRecaptcha() {
                         if (questionSection.length > 0 && !questionSection.is(':visible')) {
                             return;
                         }
-                        if (questionItem.attr('data-conditional') === 'true' && !questionItem.is(':visible')) {
+                        if (questionItem.attr('data-visibility-rules') && !isQuestionVisible(questionItem)) {
                             return;
                         }
                     } else if (fieldContainer.length > 0 && !fieldContainer.is(':visible')) {
@@ -1235,7 +1283,7 @@ function executeRecaptcha() {
                         }
                         
                         // Controlla anche se la domanda condizionale è nascosta
-                        if (questionItem.length > 0 && questionItem.attr('data-conditional') === 'true' && !questionItem.is(':visible')) {
+                        if (questionItem.length > 0 && questionItem.attr('data-visibility-rules') && !isQuestionVisible(questionItem)) {
     
                             return;
                         }
@@ -1380,85 +1428,30 @@ $(document).ready(function() {
 
     // Gestione domande condizionali
     function updateConditionalQuestions() {
-    
-        
-        // Raccogli tutte le risposte attuali
-        const answers = {};
-        $('input[type=\"radio\"]:checked, textarea[name^=\"Answer[\"], select.answer-select').each(function() {
-            const name = $(this).attr('name');
-            let value = $(this).val();
-            if (name && value) {
-                const match = name.match(/Answer\[(\d+)\]/);
-                if (match) {
-                    if (Array.isArray(value)) {
-                        answers[match[1]] = value.join(',');
-                    } else {
-                        answers[match[1]] = value;
-                    }
-                }
-            }
-        });
-        
-        // Raccogli le risposte multiple dai checkbox
-        $('.multiple-checkbox:checked').each(function() {
-            const questionId = $(this).attr('data-question-id');
-            const value = $(this).val();
-            if (questionId && value) {
-                // Per le domande multiple, concateniamo i valori selezionati
-                if (answers[questionId]) {
-                    answers[questionId] += ',' + value;
-                } else {
-                    answers[questionId] = value;
-                }
-            }
-        });
-        
-
-        
-
-        
-        // Controlla ogni domanda condizionale
-        $('[data-conditional=\"true\"]').each(function() {
+        $('[data-visibility-rules]').filter('.question-item').each(function() {
             const questionElement = $(this);
-            const conditionQuestionId = questionElement.attr('data-condition-question');
-            const conditionOperator = questionElement.attr('data-condition-operator');
-            const conditionValue = questionElement.attr('data-condition-value');
-            
+            let ruleset;
 
-            
-            // Verifica se la domanda condizione ha una risposta
-            if (!answers[conditionQuestionId]) {
-                questionElement.hide();
-                questionElement.find('input, textarea, .multiple-checkbox').prop('disabled', true);
+            try {
+                ruleset = JSON.parse(questionElement.attr('data-visibility-rules'));
+            } catch (e) {
                 return;
             }
-            
-            const actualValue = answers[conditionQuestionId];
-            let shouldShow = false;
-            
-            // Valuta la condizione
-            switch (conditionOperator) {
-                case '=':
-                    shouldShow = actualValue == conditionValue;
-                    break;
-                case '!=':
-                    shouldShow = actualValue != conditionValue;
-                    break;
-                case 'in':
-                    const expectedValues = conditionValue.split(',');
-                    shouldShow = expectedValues.includes(actualValue);
-                    break;
-                case 'not in':
-                    const notExpectedValues = conditionValue.split(',');
-                    shouldShow = !notExpectedValues.includes(actualValue);
-                    break;
-                default:
-                    shouldShow = true;
-            }
-            
 
-            
-            // Mostra/nascondi la domanda condizionale
+            const participantData = {
+                tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
+                tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
+                soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
+                age: $('#QuestionnaireParticipant_age').val(),
+                eta: $('#QuestionnaireParticipant_age').val(),
+                anno: new Date().getFullYear().toString()
+            };
+
+            const shouldShow = evaluateVisibilityRuleset(ruleset, {
+                participant: participantData,
+                answers: collectCurrentAnswers()
+            });
+
             if (shouldShow) {
                 questionElement.slideDown(300);
                 questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', false);
@@ -1467,8 +1460,8 @@ $(document).ready(function() {
                 questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', true);
             }
         });
-        
 
+        updateSectionVisibility();
     }
     
     // Event listener per i cambiamenti nelle risposte

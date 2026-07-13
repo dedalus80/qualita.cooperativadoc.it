@@ -32,6 +32,12 @@ class Question extends CActiveRecord
             'options' => array(self::HAS_MANY, 'QuestionOption', 'question_id'),
             'answers' => array(self::HAS_MANY, 'Answer', 'question_id'),
             'conditionQuestion' => array(self::BELONGS_TO, 'Question', 'condition_question_id'),
+            'visibilityRuleset' => array(
+                self::HAS_ONE,
+                'VisibilityRuleset',
+                '',
+                'on' => "visibilityRuleset.target_type = 'question' AND visibilityRuleset.target_id = t.id",
+            ),
         );
     }
 
@@ -100,42 +106,36 @@ class Question extends CActiveRecord
     }
 
     /**
-     * Verifica se la domanda è condizionale
+     * Verifica se la domanda è condizionale (legacy o ruleset)
      */
     public function isConditional()
     {
-        return !empty($this->condition_question_id) && !empty($this->condition_operator) && !empty($this->condition_value);
+        $ruleset = VisibilityRulesHelper::findRuleset('question', $this->id);
+        if ($ruleset) {
+            $data = $ruleset->toArray();
+            return !empty($data['enabled']) && !empty($data['rules']);
+        }
+
+        return !empty($this->condition_question_id) && !empty($this->condition_operator);
     }
 
     /**
-     * Verifica se la domanda dovrebbe essere mostrata basandosi sulla risposta di un'altra domanda
+     * @return array
      */
-    public function shouldShow($answers = [])
+    public function getVisibilityRulesetData()
     {
-        if (!$this->isConditional()) {
-            return true;
-        }
+        return VisibilityRulesHelper::getRulesetDataForQuestion($this);
+    }
 
-        if (!isset($answers[$this->condition_question_id])) {
-            return false;
-        }
-
-        $conditionValue = $answers[$this->condition_question_id];
-        $expectedValue = $this->condition_value;
-
-        switch ($this->condition_operator) {
-            case '=':
-                return $conditionValue == $expectedValue;
-            case '!=':
-                return $conditionValue != $expectedValue;
-            case 'in':
-                $expectedValues = explode(',', $expectedValue);
-                return in_array($conditionValue, $expectedValues);
-            case 'not in':
-                $expectedValues = explode(',', $expectedValue);
-                return !in_array($conditionValue, $expectedValues);
-            default:
-                return true;
-        }
+    /**
+     * Verifica se la domanda dovrebbe essere mostrata
+     */
+    public function shouldShow($answers = array(), $participant = array())
+    {
+        $ruleset = $this->getVisibilityRulesetData();
+        return VisibilityRulesEvaluator::evaluate($ruleset, array(
+            'answers' => $answers,
+            'participant' => $participant,
+        ));
     }
 }

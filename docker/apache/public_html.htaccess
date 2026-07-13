@@ -1,0 +1,2 @@
+# Override Docker: disabilita il redirect HTTPS di public_html/.htaccess in produzione.
+# In locale il container espone solo HTTP sulla porta 8080.

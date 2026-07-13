@@ -28,7 +28,35 @@ class QuestionnaireSection extends CActiveRecord
         return array(
             'version' => array(self::BELONGS_TO, 'QuestionnaireVersion', 'version_id'),
             'questions' => [self::HAS_MANY, 'Question', 'section_id', 'order' => '`questions`.`order` ASC'],
+            'visibilityRuleset' => array(
+                self::HAS_ONE,
+                'VisibilityRuleset',
+                '',
+                'on' => "visibilityRuleset.target_type = 'section' AND visibilityRuleset.target_id = t.id",
+            ),
         );
+    }
+
+    /**
+     * @return array
+     */
+    public function getVisibilityRulesetData()
+    {
+        return VisibilityRulesHelper::getRulesetDataForSection($this);
+    }
+
+    /**
+     * @param array $answers
+     * @param array $participant
+     * @return bool
+     */
+    public function shouldShow($answers = array(), $participant = array())
+    {
+        $ruleset = $this->getVisibilityRulesetData();
+        return VisibilityRulesEvaluator::evaluate($ruleset, array(
+            'answers' => $answers,
+            'participant' => $participant,
+        ));
     }
 
     public function attributeLabels()

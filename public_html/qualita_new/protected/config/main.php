@@ -4,7 +4,7 @@
 // Yii::setPathOfAlias('local','path/to/local-folder');
 // This is the main Web application configuration. Any writable
 // CWebApplication properties can be configured here.
-return array(
+$config = array(
     'language' => 'it',
     'timeZone' => 'Europe/Rome',
     'basePath' => dirname(__FILE__) . DIRECTORY_SEPARATOR . '..', 
@@ -307,3 +307,10 @@ return array(
         ]
     ),
 );
+
+$localConfigFile = dirname(__FILE__) . '/main-local.php';
+if (is_readable($localConfigFile)) {
+    return CMap::mergeArray($config, require($localConfigFile));
+}
+
+return $config;

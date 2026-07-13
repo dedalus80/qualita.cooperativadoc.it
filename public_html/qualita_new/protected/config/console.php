@@ -2,7 +2,7 @@
 
 // This is the configuration for yiic console application.
 // Any writable CConsoleApplication properties can be configured here.
-return array(
+$config = array(
 	'basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
 	'name'=>'Console Qualita',
 
@@ -36,3 +36,10 @@ return array(
 		),
 	),
 );
+
+$localConfigFile = dirname(__FILE__) . '/console-local.php';
+if (is_readable($localConfigFile)) {
+	return CMap::mergeArray($config, require($localConfigFile));
+}
+
+return $config;

@@ -81,3 +81,7 @@ Desktop.ini
 *.tar.gz
 *.tgz
 *.rar
+
+# Docker files
+/docker/*
+docker-compose.yml

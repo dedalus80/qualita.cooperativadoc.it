@@ -952,6 +952,8 @@ class QuestionnaireController extends Controller
                     Yii::app()->end();
                 }
 
+                VisibilityRulesHelper::cloneRuleset('section', $section->id, 'section', $newSection->id, array());
+
                 // 4. Clona le domande della sezione
                 $questions = Question::model()->findAll(array(
                     'condition' => 'section_id = :section_id',
@@ -988,6 +990,8 @@ class QuestionnaireController extends Controller
                             'oldConditionQuestionId' => $question->condition_question_id,
                         );
                     }
+
+                    VisibilityRulesHelper::cloneRuleset('question', $question->id, 'question', $newQuestion->id, $oldToNewQuestionIds);
 
                     // 5. Clona le opzioni della domanda (se presenti)
                     if (in_array($question->type, array('option', 'custom'), true)) {

@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/apache/public_html.htaccess:/var/www/html/public_html/.htaccess:ro
+      - ./docker/apache/qualita_new.htaccess:/var/www/html/public_html/qualita_new/.htaccess:ro
+      - ./docker/config/main-local.php:/var/www/html/public_html/qualita_new/protected/config/main-local.php:ro
+      - ./docker/config/console-local.php:/var/www/html/public_html/qualita_new/protected/config/console-local.php:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: Europe/Rome
+
+  db:
+    image: mariadb:10.6
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: qualita_1_sito
+      MYSQL_USER: qualita
+      MYSQL_PASSWORD: qualita
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  db_data:

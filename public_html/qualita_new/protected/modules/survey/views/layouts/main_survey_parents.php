@@ -9,8 +9,7 @@
 		<!-- Bootstrap CSS -->
 		<link href="https://qualita.cooperativadoc.it/qualita_new/css/bootstrap-5.0.2-dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 		<!-- Font Awesome (icone, es. calendario datepicker) -->
-		<link href="https://qualita.cooperativadoc.it/qualita_new/bootstrap-assets/css/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
-
+		<link href="<?php echo Yii::app()->request->baseUrl; ?>/bootstrap-assets/css/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 		<title><?php echo CHtml::encode($this->pageTitle);?></title>
 	</head>
 

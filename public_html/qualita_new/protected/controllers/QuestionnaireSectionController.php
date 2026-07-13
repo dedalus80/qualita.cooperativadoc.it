@@ -16,7 +16,7 @@ class QuestionnaireSectionController extends Controller
     {
         return array(
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('index', 'view', 'create', 'update', 'delete', 'createFull', 'editFull', 'getConditionValues'),
+                'actions' => array('index', 'view', 'create', 'update', 'delete', 'createFull', 'editFull', 'getConditionValues', 'getRuleValueOptions'),
                 'expression'=>'Yii::app()->user->getState("group") == "ADMIN"',
             ),
             array('deny', // deny all users
@@ -112,23 +112,39 @@ class QuestionnaireSectionController extends Controller
                         throw new Exception('Errore salvataggio sezione: '.$section->title);
                     }
 
+                    if (isset($sectionData['visibility_ruleset'])) {
+                        $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
+                        VisibilityRulesHelper::syncRuleset('section', $section->id, $rulesetData);
+                        VisibilityRulesHelper::syncLegacySectionFields($section, $rulesetData);
+                        $section->save(false);
+                    }
+
                     if (isset($sectionData['questions'])) {
                         foreach ($sectionData['questions'] as $questionData) {
                             $question = new Question;
                             $question->section_id = $section->id;
                             $this->applyQuestionAttributesFromPost($question, $questionData);
-                            
-                            // Gestione campi condizionali per nuove domande in createFull
-                            if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
-                                $question->condition_question_id = null;
-                                $question->condition_operator = null;
-                                $question->condition_value = null;
+
+                            if (isset($questionData['visibility_ruleset'])) {
+                                $rulesetData = VisibilityRulesHelper::parseRulesetJson($questionData['visibility_ruleset']);
+                            } else {
+                                $rulesetData = VisibilityRulesHelper::emptyRuleset();
+                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                    $question->condition_question_id = null;
+                                    $question->condition_operator = null;
+                                    $question->condition_value = null;
+                                }
                             }
 
                             $this->normalizeQuestionForSave($question);
-                            
+
                             if (!$question->save())
                                 throw new Exception('Errore salvataggio domanda: '.$question->text);
+
+                            if (isset($questionData['visibility_ruleset'])) {
+                                $this->syncQuestionVisibilityRuleset($question, $rulesetData, $version_id);
+                                $question->save(false);
+                            }
                             // Gestione opzioni custom
                             if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
                                 // Debug temporaneo
@@ -173,12 +189,23 @@ class QuestionnaireSectionController extends Controller
             }
         }
 
-        $this->render('createFull', array('version_id' => $version_id));
+        $version = QuestionnaireVersion::model()->with('questionnaire')->findByPk($version_id);
+        if (!$version) {
+            throw new CHttpException(404, 'Versione non trovata.');
+        }
+
+        $catalog = VisibilityRulesHelper::buildCatalogForVersion($version);
+
+        $this->render('createFull', array(
+            'version_id' => $version_id,
+            'version' => $version,
+            'catalog' => $catalog,
+        ));
     }
 
     public function actionEditFull($version_id)
     {
-        $version = QuestionnaireVersion::model()->findByPk($version_id);
+        $version = QuestionnaireVersion::model()->with('questionnaire')->findByPk($version_id);
         if (!$version) throw new CHttpException(404, 'Versione non trovata.');
 
         $sections = QuestionnaireSection::model()->with('questions')->findAll(array(
@@ -201,6 +228,23 @@ class QuestionnaireSectionController extends Controller
                         if (!$section->save())
                             throw new Exception('Errore salvataggio sezione '.$section_id.': '.CJSON::encode($section->getErrors()));
 
+                        if (isset($sectionData['visibility_ruleset'])) {
+                            $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
+                            $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+                                $rulesetData,
+                                'section',
+                                (int) $section->order,
+                                null,
+                                (int) $version_id
+                            );
+                            if ($linearError) {
+                                throw new Exception('Sezione "' . $section->title . '": ' . $linearError);
+                            }
+                            VisibilityRulesHelper::syncRuleset('section', $section->id, $rulesetData);
+                            VisibilityRulesHelper::syncLegacySectionFields($section, $rulesetData);
+                            $section->save(false);
+                        }
+
                         // Update domande esistenti
                         if (isset($sectionData['questions'])) {
                             foreach ($sectionData['questions'] as $question_id => $questionData) {
@@ -208,12 +252,18 @@ class QuestionnaireSectionController extends Controller
                                 if (!$question) continue;
 
                                 $this->applyQuestionAttributesFromPost($question, $questionData);
-                                
-                                // Gestione campi condizionali
-                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
-                                    $question->condition_question_id = null;
-                                    $question->condition_operator = null;
-                                    $question->condition_value = null;
+
+                                if (isset($questionData['visibility_ruleset'])) {
+                                    $rulesetData = VisibilityRulesHelper::parseRulesetJson($questionData['visibility_ruleset']);
+                                    $this->syncQuestionVisibilityRuleset($question, $rulesetData, $version_id);
+                                } else {
+                                    // Gestione campi condizionali legacy
+                                    if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                        $question->condition_question_id = null;
+                                        $question->condition_operator = null;
+                                        $question->condition_value = null;
+                                        VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
+                                    }
                                 }
 
                                 $this->normalizeQuestionForSave($question);
@@ -267,24 +317,52 @@ class QuestionnaireSectionController extends Controller
                         if (!$section->save())
                             throw new Exception('Errore salvataggio nuova sezione: '.CJSON::encode($section->getErrors()));
 
+                        if (isset($sectionData['visibility_ruleset'])) {
+                            $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
+                            $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+                                $rulesetData,
+                                'section',
+                                (int) $section->order,
+                                null,
+                                (int) $version_id
+                            );
+                            if ($linearError) {
+                                throw new Exception('Sezione "' . $section->title . '": ' . $linearError);
+                            }
+                            VisibilityRulesHelper::syncRuleset('section', $section->id, $rulesetData);
+                            VisibilityRulesHelper::syncLegacySectionFields($section, $rulesetData);
+                            $section->save(false);
+                        }
+
                         // Nuove domande della nuova sezione
                         if (isset($sectionData['questions'])) {
                             foreach ($sectionData['questions'] as $questionData) {
                                 $question = new Question;
                                 $question->setAttribute('section_id', $section->id);
                                 $this->applyQuestionAttributesFromPost($question, $questionData);
-                                
-                                // Gestione campi condizionali per nuove domande in nuove sezioni
-                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
-                                    $question->condition_question_id = null;
-                                    $question->condition_operator = null;
-                                    $question->condition_value = null;
+
+                                if (isset($questionData['visibility_ruleset'])) {
+                                    $rulesetData = VisibilityRulesHelper::parseRulesetJson($questionData['visibility_ruleset']);
+                                } else {
+                                    $rulesetData = VisibilityRulesHelper::emptyRuleset();
+                                    if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                        $question->condition_question_id = null;
+                                        $question->condition_operator = null;
+                                        $question->condition_value = null;
+                                    }
                                 }
 
                                 $this->normalizeQuestionForSave($question);
-                                
+
                                 if (!$question->save())
                                     throw new Exception('Errore salvataggio domanda: '.CJSON::encode($question->getErrors()));
+
+                                if (isset($questionData['visibility_ruleset'])) {
+                                    $this->syncQuestionVisibilityRuleset($question, $rulesetData, $version_id);
+                                    $question->save(false);
+                                } elseif (empty($questionData['condition_question_id'])) {
+                                    VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
+                                }
                                 
                                 // Gestione opzioni custom per nuove domande in nuove sezioni
                                 if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
@@ -328,18 +406,29 @@ class QuestionnaireSectionController extends Controller
                             $question = new Question;
                             $question->setAttribute('section_id', $section_id);
                             $this->applyQuestionAttributesFromPost($question, $questionData);
-                            
-                            // Gestione campi condizionali per nuove domande in sezioni esistenti
-                            if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
-                                $question->condition_question_id = null;
-                                $question->condition_operator = null;
-                                $question->condition_value = null;
+
+                            if (isset($questionData['visibility_ruleset'])) {
+                                $rulesetData = VisibilityRulesHelper::parseRulesetJson($questionData['visibility_ruleset']);
+                            } else {
+                                $rulesetData = VisibilityRulesHelper::emptyRuleset();
+                                if (empty($questionData['condition_question_id']) || empty($questionData['condition_operator']) || empty($questionData['condition_value'])) {
+                                    $question->condition_question_id = null;
+                                    $question->condition_operator = null;
+                                    $question->condition_value = null;
+                                }
                             }
 
                             $this->normalizeQuestionForSave($question);
-                            
+
                             if (!$question->save())
                                 throw new Exception('Errore salvataggio nuova domanda: '.CJSON::encode($question->getErrors()));
+
+                            if (isset($questionData['visibility_ruleset'])) {
+                                $this->syncQuestionVisibilityRuleset($question, $rulesetData, $version_id);
+                                $question->save(false);
+                            } elseif (empty($questionData['condition_question_id'])) {
+                                VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
+                            }
                             
                             // Gestione opzioni custom per nuove domande
                             if ($question->type === 'custom' && !empty($questionData['custom_options'])) {
@@ -395,10 +484,13 @@ class QuestionnaireSectionController extends Controller
             }
         }
 
+        $catalog = VisibilityRulesHelper::buildCatalogForVersion($version);
+
         $this->render('editFull', array(
             'version' => $version,
             'sections' => $sections,
             'hasResponses' => $hasResponses,
+            'catalog' => $catalog,
         ));
     }
 
@@ -460,6 +552,31 @@ class QuestionnaireSectionController extends Controller
     }
 
     /**
+     * Valida e sincronizza il ruleset di visibilità di una domanda.
+     *
+     * @param Question $question
+     * @param array $rulesetData
+     * @param int $versionId
+     */
+    private function syncQuestionVisibilityRuleset(Question $question, array $rulesetData, $versionId)
+    {
+        $section = $question->section ? $question->section : QuestionnaireSection::model()->findByPk($question->section_id);
+        $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+            $rulesetData,
+            'question',
+            $section ? (int) $section->order : 0,
+            (int) $question->order,
+            (int) $versionId
+        );
+        if ($linearError) {
+            throw new Exception('Domanda "' . $question->text . '": ' . $linearError);
+        }
+
+        VisibilityRulesHelper::syncRuleset('question', $question->id, $rulesetData);
+        VisibilityRulesHelper::syncLegacyQuestionFields($question, $rulesetData);
+    }
+
+    /**
      * Action AJAX per ottenere i valori possibili per condition_value
      * in base al campo condition_field selezionato
      */
@@ -515,6 +632,39 @@ class QuestionnaireSectionController extends Controller
                 'type' => 'text',
                 'placeholder' => 'Inserisci valore'
             );
+        }
+
+        echo CJSON::encode($response);
+        Yii::app()->end();
+    }
+
+    /**
+     * Valori possibili per una regola di visibilità.
+     */
+    public function actionGetRuleValueOptions()
+    {
+        if (!Yii::app()->request->isAjaxRequest) {
+            throw new CHttpException(400, 'Richiesta non valida.');
+        }
+
+        $sourceType = Yii::app()->request->getParam('source_type');
+        $sourceKey = Yii::app()->request->getParam('source_key');
+        $versionId = (int) Yii::app()->request->getParam('version_id');
+        $clientId = null;
+
+        if ($versionId) {
+            $version = QuestionnaireVersion::model()->with('questionnaire')->findByPk($versionId);
+            if ($version && $version->questionnaire) {
+                $clientId = $version->questionnaire->client_id;
+            }
+        }
+
+        if ($sourceType === 'participant_field') {
+            $response = VisibilityRulesHelper::getRuleValueOptionsForParticipantField($sourceKey, $clientId);
+        } elseif ($sourceType === 'question_answer') {
+            $response = VisibilityRulesHelper::getRuleValueOptionsForQuestion((int) $sourceKey);
+        } else {
+            $response = array('type' => 'text', 'placeholder' => 'Inserisci valore');
         }
 
         echo CJSON::encode($response);

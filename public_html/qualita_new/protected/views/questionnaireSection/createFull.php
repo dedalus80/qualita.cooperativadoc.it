@@ -112,7 +112,7 @@ $(function(){
                             Abilita condizioni per mostrare questa sezione
                         </label>
                     </div>
-                    <div class="visibility-rules-summary text-muted small" style="display:none;">
+                    <div class="visibility-rules-summary text-secondary small" style="display:none;">
                         <i class="fa fa-filter"></i>
                         <span class="visibility-rules-summary-text"></span>
                     </div>
@@ -177,7 +177,7 @@ $(function(){
                         <option value="checkbox">Checkbox (scelta multipla)</option>
                         <option value="select">Select</option>
                     </select>
-                    <small class="text-muted">Con Select puoi combinare scelta singola o multipla tramite la checkbox sopra.</small>
+                    <small class="text-secondary">Con Select puoi combinare scelta singola o multipla tramite la checkbox sopra.</small>
                 </div>
                 <div class="form-group custom-options-group" style="display:none;">
                     <label>Opzioni personalizzate</label>
@@ -204,7 +204,7 @@ $(function(){
                             Abilita condizioni per mostrare questa domanda
                         </label>
                     </div>
-                    <div class="visibility-rules-summary text-muted small" style="display:none;">
+                    <div class="visibility-rules-summary text-secondary small" style="display:none;">
                         <i class="fa fa-filter"></i>
                         <span class="visibility-rules-summary-text"></span>
                     </div>

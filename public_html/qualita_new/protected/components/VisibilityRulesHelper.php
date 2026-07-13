@@ -12,12 +12,47 @@ class VisibilityRulesHelper
     const PARTICIPANT_FIELD_LABELS = array(
         'tipologia_id' => 'Tipologia Soggiorno',
         'centro' => 'Centro/Soggiorno',
-        'ente' => 'Cliente/Ente',
-        'anno' => 'Anno',
-        'eta' => 'Età',
-        'organizzatore' => 'Organizzatore',
         'soggiorno' => 'Soggiorno',
         'turno' => 'Turno',
+        'eta' => 'Età',
+        'group_name' => 'Gruppo',
+        'coordinator_name' => 'Nome Coordinatore',
+        'coordinator_surname' => 'Cognome Coordinatore',
+        'name' => 'Nome',
+        'surname' => 'Cognome',
+        'email' => 'Email',
+        'phone' => 'Telefono',
+        'date_course' => 'Data corso',
+        'type_course_id' => 'Tipologia corso',
+        'course_category' => 'Categoria corso',
+        'title_course_id' => 'Titolo corso',
+        'affiliated_organisation' => 'Ente/organizzazione',
+        // Legacy (solo risoluzione etichette regole esistenti)
+        'ente' => 'Cliente/Ente',
+        'anno' => 'Anno',
+        'organizzatore' => 'Organizzatore',
+    );
+
+    /**
+     * Campi anagrafici disponibili per tipo questionario (allineato a fill.php data-field).
+     *
+     * @var array
+     */
+    const PARTICIPANT_FIELDS_BY_TYPE = array(
+        'A' => array(),
+        'SP' => array(
+            'tipologia_id', 'centro', 'soggiorno', 'turno', 'eta', 'group_name',
+            'coordinator_name', 'coordinator_surname', 'name', 'surname',
+        ),
+        'SG' => array(
+            'tipologia_id', 'centro', 'soggiorno', 'turno', 'eta',
+            'coordinator_name', 'coordinator_surname', 'name', 'surname', 'email', 'phone',
+        ),
+        'Q' => array('name', 'surname', 'email', 'phone'),
+        'F' => array(
+            'date_course', 'type_course_id', 'course_category', 'title_course_id',
+            'name', 'surname', 'affiliated_organisation',
+        ),
     );
 
     /**
@@ -290,6 +325,29 @@ class VisibilityRulesHelper
             return implode(', ', $labels);
         }
 
+        if ($rule['source_type'] === 'participant_field') {
+            $sourceKey = $rule['source_key'];
+            $lookupMaps = array(
+                'centro' => 'centri',
+                'soggiorno' => 'centri',
+                'type_course_id' => 'course_types',
+                'title_course_id' => 'course_titles',
+                'course_category' => 'course_categories',
+            );
+            if (isset($lookupMaps[$sourceKey]) && isset($catalog[$lookupMaps[$sourceKey]])) {
+                $map = $catalog[$lookupMaps[$sourceKey]];
+                if (in_array($rule['operator'], array('in', 'not in'), true)) {
+                    $ids = array_map('trim', explode(',', $value));
+                    $labels = array();
+                    foreach ($ids as $id) {
+                        $labels[] = isset($map[$id]) ? $map[$id] : $id;
+                    }
+                    return implode(', ', $labels);
+                }
+                return isset($map[$value]) ? $map[$value] : $value;
+            }
+        }
+
         if ($rule['source_type'] === 'question_answer') {
             $questionId = $rule['source_key'];
             if (isset($catalog['questions'][$questionId]['values'][$value])) {
@@ -355,23 +413,123 @@ class VisibilityRulesHelper
             }
         }
 
-        return array(
+        $questionnaireType = $version->questionnaire ? $version->questionnaire->questionnaire_type : '';
+        $catalog = array(
             'questions' => $questions,
-            'participant_fields' => self::getParticipantFieldsForSections(),
+            'questionnaire_type' => $questionnaireType,
+            'supports_participant_fields' => self::supportsParticipantFieldRules($questionnaireType),
+            'participant_fields' => self::getParticipantFieldOptionsForType($questionnaireType),
             'tipologie' => $tipologie,
+        );
+
+        if ($questionnaireType === 'F') {
+            $catalog = array_merge($catalog, self::buildCourseCatalogData());
+        }
+
+        if (in_array($questionnaireType, array('SP', 'SG'), true)) {
+            $centriCriteria = array('order' => 'nome ASC');
+            $clientId = $version->questionnaire ? $version->questionnaire->client_id : null;
+            if ($clientId) {
+                $centriCriteria['condition'] = 'cliente_id = :cliente';
+                $centriCriteria['params'] = array(':cliente' => $clientId);
+            }
+            $catalog['centri'] = CHtml::listData(Soggiorni::model()->findAll($centriCriteria), 'id', 'nome');
+        }
+
+        return $catalog;
+    }
+
+    /**
+     * @param string $questionnaireType
+     * @return bool
+     */
+    public static function supportsParticipantFieldRules($questionnaireType)
+    {
+        return !empty(self::getParticipantFieldOptionsForType($questionnaireType));
+    }
+
+    /**
+     * @param string $questionnaireType
+     * @return array key => label
+     */
+    public static function getParticipantFieldOptionsForType($questionnaireType)
+    {
+        $keys = array_key_exists($questionnaireType, self::PARTICIPANT_FIELDS_BY_TYPE)
+            ? self::PARTICIPANT_FIELDS_BY_TYPE[$questionnaireType]
+            : array();
+        $options = array();
+
+        foreach ($keys as $key) {
+            if (array_key_exists($key, self::PARTICIPANT_FIELD_LABELS)) {
+                $options[$key] = self::PARTICIPANT_FIELD_LABELS[$key];
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Catalogo opzioni per questionari formazione (tipo F).
+     *
+     * @return array
+     */
+    public static function buildCourseCatalogData()
+    {
+        $courseTypes = array();
+        $courseCategories = array(
+            'SOCI' => 'SOCI',
+            'APERTA A TUTTI' => 'APERTA A TUTTI',
+        );
+        $courseTitles = array();
+
+        $courseTypeRows = Yii::app()->db->createCommand()
+            ->select('id, nome')
+            ->from('doc_tipologie_formazione')
+            ->where('attivo = :active', array(':active' => 'Y'))
+            ->order('nome')
+            ->queryAll();
+        if (!empty($courseTypeRows)) {
+            foreach ($courseTypeRows as $row) {
+                $courseTypes[(string) $row['id']] = $row['nome'];
+            }
+        }
+
+        $courseTitleRows = Yii::app()->db->createCommand()
+            ->select('id, titolo_corso AS nome')
+            ->from('doc_formazione_titolo_corsi')
+            ->where('attivo = :active', array(':active' => 'Y'))
+            ->order('nome')
+            ->queryAll();
+        if (!empty($courseTitleRows)) {
+            foreach ($courseTitleRows as $row) {
+                $courseTitles[(string) $row['id']] = $row['nome'];
+            }
+        }
+
+        return array(
+            'course_types' => $courseTypes,
+            'course_categories' => $courseCategories,
+            'course_titles' => $courseTitles,
         );
     }
 
     /**
+     * Campi partecipante disponibili come sorgente condizione (tutti i tipi).
+     *
      * @return array
+     */
+    public static function getParticipantFieldOptions()
+    {
+        return self::PARTICIPANT_FIELD_LABELS;
+    }
+
+    /**
+     * @return array
+     * @deprecated Usare getParticipantFieldOptions()
      */
     public static function getParticipantFieldsForSections()
     {
-        $fields = array();
-        foreach (array('tipologia_id') as $key) {
-            $fields[$key] = self::PARTICIPANT_FIELD_LABELS[$key];
-        }
-        return $fields;
+        return self::getParticipantFieldOptions();
     }
 
     /**
@@ -455,7 +613,93 @@ class VisibilityRulesHelper
             return array('type' => 'select', 'values' => $values, 'multiple' => true);
         }
 
-        return array('type' => 'text', 'placeholder' => 'Inserisci valore');
+        if ($field === 'centro' || $field === 'soggiorno') {
+            $criteria = array('order' => 'nome ASC');
+            if ($clientId) {
+                $criteria['condition'] = 'cliente_id = :cliente';
+                $criteria['params'] = array(':cliente' => $clientId);
+            }
+            return array(
+                'type' => 'select',
+                'values' => CHtml::listData(Soggiorni::model()->findAll($criteria), 'id', 'nome'),
+                'multiple' => true,
+            );
+        }
+
+        if ($field === 'ente') {
+            return array(
+                'type' => 'select',
+                'values' => CHtml::listData(Clienti::model()->findAll(array('order' => 'nome ASC')), 'id', 'nome'),
+                'multiple' => true,
+            );
+        }
+
+        if ($field === 'eta') {
+            return array(
+                'type' => 'select',
+                'values' => SurveyStays::getParticipantAges(),
+                'multiple' => true,
+            );
+        }
+
+        if ($field === 'type_course_id') {
+            $rows = Yii::app()->db->createCommand()
+                ->select('id, nome')
+                ->from('doc_tipologie_formazione')
+                ->where('attivo = :active', array(':active' => 'Y'))
+                ->order('nome')
+                ->queryAll();
+            $values = array();
+            foreach ($rows as $row) {
+                $values[(string) $row['id']] = $row['nome'];
+            }
+            return array('type' => 'select', 'values' => $values, 'multiple' => true);
+        }
+
+        if ($field === 'course_category') {
+            return array(
+                'type' => 'select',
+                'values' => array(
+                    'SOCI' => 'SOCI',
+                    'APERTA A TUTTI' => 'APERTA A TUTTI',
+                ),
+                'multiple' => true,
+            );
+        }
+
+        if ($field === 'title_course_id') {
+            $rows = Yii::app()->db->createCommand()
+                ->select('id, titolo_corso AS nome')
+                ->from('doc_formazione_titolo_corsi')
+                ->where('attivo = :active', array(':active' => 'Y'))
+                ->order('nome')
+                ->queryAll();
+            $values = array();
+            foreach ($rows as $row) {
+                $values[(string) $row['id']] = $row['nome'];
+            }
+            return array('type' => 'select', 'values' => $values, 'multiple' => true);
+        }
+
+        $placeholders = array(
+            'anno' => 'es. 2024',
+            'organizzatore' => 'es. 1 o 1,2,3',
+            'turno' => 'es. 1 o 1,2,3',
+            'date_course' => 'es. 2024-06-15',
+            'name' => 'es. Mario',
+            'surname' => 'es. Rossi',
+            'email' => 'es. nome@dominio.it',
+            'phone' => 'es. 3331234567',
+            'group_name' => 'es. Gruppo A',
+            'coordinator_name' => 'es. Mario',
+            'coordinator_surname' => 'es. Rossi',
+            'affiliated_organisation' => 'es. Ente/organizzazione',
+        );
+
+        return array(
+            'type' => 'text',
+            'placeholder' => isset($placeholders[$field]) ? $placeholders[$field] : 'Inserisci valore',
+        );
     }
 
     /**
@@ -554,6 +798,78 @@ class VisibilityRulesHelper
         }
 
         return null;
+    }
+
+    /**
+     * Valida che le regole sui campi partecipante siano coerenti col tipo questionario.
+     *
+     * @param array $rulesetData
+     * @param string $questionnaireType
+     * @return string|null Messaggio errore
+     */
+    public static function validateParticipantFieldRules(array $rulesetData, $questionnaireType)
+    {
+        if (empty($rulesetData['enabled']) || empty($rulesetData['rules'])) {
+            return null;
+        }
+
+        $allowedFields = self::getParticipantFieldOptionsForType($questionnaireType);
+
+        foreach ($rulesetData['rules'] as $index => $rule) {
+            if ($rule['source_type'] !== 'participant_field') {
+                continue;
+            }
+
+            if (empty($allowedFields)) {
+                return 'La regola ' . ($index + 1) . ' usa un campo partecipante, non disponibile per questionari di tipo ' . $questionnaireType . '.';
+            }
+
+            if (!isset($allowedFields[$rule['source_key']])) {
+                return 'La regola ' . ($index + 1) . ' usa un campo partecipante non valido per questo tipo di questionario.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Validazione completa ruleset (ordine lineare + campi partecipante).
+     *
+     * @param array $rulesetData
+     * @param string $targetType
+     * @param int $targetSectionOrder
+     * @param int|null $targetQuestionOrder
+     * @param int $versionId
+     * @param string|null $questionnaireType
+     * @return string|null
+     */
+    public static function validateRulesetForVersion(
+        array $rulesetData,
+        $targetType,
+        $targetSectionOrder,
+        $targetQuestionOrder,
+        $versionId,
+        $questionnaireType = null
+    ) {
+        if ($questionnaireType === null) {
+            $version = QuestionnaireVersion::model()->with('questionnaire')->findByPk((int) $versionId);
+            $questionnaireType = $version && $version->questionnaire
+                ? $version->questionnaire->questionnaire_type
+                : '';
+        }
+
+        $participantError = self::validateParticipantFieldRules($rulesetData, $questionnaireType);
+        if ($participantError) {
+            return $participantError;
+        }
+
+        return self::validateRulesetLinearOrder(
+            $rulesetData,
+            $targetType,
+            $targetSectionOrder,
+            $targetQuestionOrder,
+            $versionId
+        );
     }
 
     /**

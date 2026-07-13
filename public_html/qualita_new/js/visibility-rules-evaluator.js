@@ -10,7 +10,19 @@
             eta: 'age',
             organizzatore: 'organizzatore_id',
             soggiorno: 'soggiorno_id',
-            turno: 'turno_id'
+            turno: 'turno_id',
+            name: 'name',
+            surname: 'surname',
+            email: 'email',
+            phone: 'phone',
+            group_name: 'group_name',
+            coordinator_name: 'coordinator_name',
+            coordinator_surname: 'coordinator_surname',
+            date_course: 'date_course',
+            type_course_id: 'type_course_id',
+            title_course_id: 'title_course_id',
+            course_category: 'course_category',
+            affiliated_organisation: 'affiliated_organisation'
         };
 
         var participantField = fieldMapping[field] || field;

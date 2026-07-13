@@ -8,7 +8,13 @@
         draftRuleset: null,
 
         init: function(config) {
-            this.catalog = config.catalog || {questions: {}, participant_fields: {}, tipologie: {}};
+            this.catalog = config.catalog || {
+                questions: {},
+                participant_fields: {},
+                tipologie: {},
+                supports_participant_fields: false,
+                questionnaire_type: ''
+            };
             this.ruleValueUrl = config.ruleValueUrl;
             this.bindEvents();
         },
@@ -101,17 +107,78 @@
             }
 
             $('input[name="visibility-rules-combine"][value="' + this.draftRuleset.combine_operator + '"]').prop('checked', true);
+            this.updateModalHint();
             this.renderRuleRows(widget);
             $('#visibility-rules-modal').modal('show');
         },
 
+        supportsParticipantFields: function() {
+            if (this.catalog.supports_participant_fields === false) {
+                return false;
+            }
+            return !$.isEmptyObject(this.getParticipantFields());
+        },
+
+        updateModalHint: function() {
+            var $hint = $('.visibility-rules-linear-hint');
+            if (!$hint.length) {
+                return;
+            }
+
+            if (this.supportsParticipantFields()) {
+                $hint.html(
+                    '<i class="fa fa-info-circle"></i> ' +
+                    '<strong>Campo partecipante</strong>: dati anagrafici mostrati nel questionario per questo tipo. ' +
+                    '<strong>Risposta domanda</strong>: domande già mostrate prima nell\'ordine di compilazione, anche nelle sezioni precedenti.'
+                );
+            } else {
+                $hint.html(
+                    '<i class="fa fa-info-circle"></i> ' +
+                    'Questo tipo di questionario non prevede dati anagrafici del partecipante: usa solo <strong>Risposta domanda</strong> ' +
+                    'per condizioni basate su domande già mostrate prima nell\'ordine di compilazione.'
+                );
+            }
+        },
+
+        getDefaultParticipantFieldKey: function() {
+            var fields = this.getParticipantFields();
+            var keys = Object.keys(fields);
+            return keys.length ? keys[0] : '';
+        },
+
+        normalizeRule: function(rule) {
+            rule = $.extend({
+                source_type: 'question_answer',
+                source_key: '',
+                operator: '=',
+                value: ''
+            }, rule || {});
+
+            if (rule.source_type === 'participant_field' && !this.supportsParticipantFields()) {
+                rule.source_type = 'question_answer';
+                rule.source_key = '';
+                rule.operator = '=';
+                rule.value = '';
+            }
+
+            if (rule.source_type === 'participant_field') {
+                var fields = this.getParticipantFields();
+                if (!fields[rule.source_key]) {
+                    rule.source_key = this.getDefaultParticipantFieldKey();
+                }
+            }
+
+            return rule;
+        },
+
         createEmptyRule: function(widget) {
             var targetType = widget.data('target-type');
-            if (targetType === 'section') {
+            if (targetType === 'section' && this.supportsParticipantFields()) {
+                var fieldKey = this.getDefaultParticipantFieldKey();
                 return {
                     source_type: 'participant_field',
-                    source_key: 'tipologia_id',
-                    operator: 'in',
+                    source_key: fieldKey,
+                    operator: fieldKey === 'tipologia_id' ? 'in' : '=',
                     value: ''
                 };
             }
@@ -137,6 +204,7 @@
             }
 
             $.each(rules, function(index, rule) {
+                rule = self.normalizeRule(rule);
                 var $row = $(self.buildRuleRow(widget, rule, index));
                 $row.attr('data-initial-value', rule.value || '');
                 $list.append($row);
@@ -148,11 +216,10 @@
         },
 
         buildRuleRow: function(widget, rule, index) {
-            var targetType = widget.data('target-type');
-            var excludeQuestionId = widget.data('exclude-question-id');
+            rule = this.normalizeRule(rule);
             var sourceTypeOptions = '';
 
-            if (targetType === 'section') {
+            if (this.supportsParticipantFields()) {
                 sourceTypeOptions += '<option value="participant_field"' + (rule.source_type === 'participant_field' ? ' selected' : '') + '>Campo partecipante</option>';
             }
             sourceTypeOptions += '<option value="question_answer"' + (rule.source_type === 'question_answer' ? ' selected' : '') + '>Risposta domanda</option>';
@@ -266,13 +333,15 @@
                             id: questionId,
                             label: sectionTitle + ' — ' + questionText,
                             type: questionType,
-                            values: {}
+                            values: {},
+                            section_title: sectionTitle
                         };
                     }
 
                     catalog.questions[questionId].section_order = sectionOrder;
                     catalog.questions[questionId].question_order = questionOrder;
                     catalog.questions[questionId].label = sectionTitle + ' — ' + questionText;
+                    catalog.questions[questionId].section_title = sectionTitle;
                     if (questionType) {
                         catalog.questions[questionId].type = questionType;
                     }
@@ -323,17 +392,27 @@
             return available;
         },
 
+        getParticipantFields: function() {
+            return this.catalog.participant_fields || {};
+        },
+
         buildSourceKeyField: function(widget, rule) {
             var sourceType = rule.source_type || 'question_answer';
             if (sourceType === 'participant_field') {
+                var fields = this.getParticipantFields();
                 var html = '<select class="form-control visibility-rule-source-key">';
-                $.each(this.catalog.participant_fields || {}, function(key, label) {
+                html += '<option value="">Seleziona campo partecipante</option>';
+                $.each(fields, function(key, label) {
                     html += '<option value="' + key + '"' + (rule.source_key === key ? ' selected' : '') + '>' + selfEscape(label) + '</option>';
                 });
                 html += '</select>';
                 return html;
             }
 
+            return this.buildQuestionAnswerSourceKeyField(widget, rule);
+        },
+
+        buildQuestionAnswerSourceKeyField: function(widget, rule) {
             var excludeQuestionId = String(widget.data('exclude-question-id') || '');
             var availableQuestions = this.getAvailableQuestions(widget);
             var catalog = this.getCatalogWithLiveOrders();
@@ -343,11 +422,49 @@
             if ($.isEmptyObject(availableQuestions)) {
                 html += '<option value="" disabled>Nessuna domanda precedente disponibile</option>';
             } else {
+                var groups = {};
+                var groupOrder = [];
+
                 $.each(availableQuestions, function(id, question) {
                     if (excludeQuestionId && String(id) === excludeQuestionId) {
                         return;
                     }
-                    html += '<option value="' + id + '"' + (String(rule.source_key) === String(id) ? ' selected' : '') + '>' + selfEscape(question.label) + '</option>';
+
+                    var sectionOrder = parseInt(question.section_order, 10);
+                    if (isNaN(sectionOrder)) {
+                        sectionOrder = 0;
+                    }
+                    var sectionTitle = question.section_title || ('Sezione ' + sectionOrder);
+                    var groupKey = sectionOrder + '|' + sectionTitle;
+
+                    if (!groups[groupKey]) {
+                        groups[groupKey] = {
+                            sectionOrder: sectionOrder,
+                            sectionTitle: sectionTitle,
+                            questions: []
+                        };
+                        groupOrder.push(groupKey);
+                    }
+
+                    groups[groupKey].questions.push({
+                        id: id,
+                        label: question.label,
+                        question: question
+                    });
+                });
+
+                groupOrder.sort(function(a, b) {
+                    return groups[a].sectionOrder - groups[b].sectionOrder;
+                });
+
+                $.each(groupOrder, function(_, groupKey) {
+                    var group = groups[groupKey];
+                    html += '<optgroup label="' + selfEscape(group.sectionTitle) + '">';
+                    $.each(group.questions, function(_, item) {
+                        html += '<option value="' + item.id + '"' + (String(rule.source_key) === String(item.id) ? ' selected' : '') + '>'
+                            + selfEscape(item.label) + '</option>';
+                    });
+                    html += '</optgroup>';
                 });
             }
 
@@ -381,10 +498,11 @@
         onSourceTypeChange: function($row) {
             var widget = this.activeWidget;
             var sourceType = $row.find('.visibility-rule-source-type').val();
+            var defaultFieldKey = this.getDefaultParticipantFieldKey();
             var rule = {
                 source_type: sourceType,
-                source_key: sourceType === 'participant_field' ? 'tipologia_id' : '',
-                operator: '=',
+                source_key: sourceType === 'participant_field' ? defaultFieldKey : '',
+                operator: sourceType === 'participant_field' && defaultFieldKey === 'tipologia_id' ? 'in' : '=',
                 value: ''
             };
             $row.find('.visibility-rule-source-key-wrap').html(
@@ -513,6 +631,14 @@
                 if (rule.source_type === 'question_answer' && !availableQuestions[rule.source_key]) {
                     return 'La regola ' + (i + 1) + ' fa riferimento a una domanda successiva o non ancora mostrata durante la compilazione.';
                 }
+                if (rule.source_type === 'participant_field') {
+                    if (!this.supportsParticipantFields()) {
+                        return 'La regola ' + (i + 1) + ' usa un campo partecipante non disponibile per questo tipo di questionario.';
+                    }
+                    if (!this.getParticipantFields()[rule.source_key]) {
+                        return 'La regola ' + (i + 1) + ' usa un campo partecipante non valido per questo tipo di questionario.';
+                    }
+                }
             }
 
             return null;
@@ -600,7 +726,8 @@
 
         resolveSourceLabel: function(rule) {
             if (rule.source_type === 'participant_field') {
-                return (this.catalog.participant_fields && this.catalog.participant_fields[rule.source_key]) || rule.source_key;
+                var fields = this.getParticipantFields();
+                return fields[rule.source_key] || rule.source_key;
             }
             if (this.catalog.questions && this.catalog.questions[rule.source_key]) {
                 return this.catalog.questions[rule.source_key].label;
@@ -630,6 +757,27 @@
                     id = $.trim(id);
                     return (self.catalog.tipologie && self.catalog.tipologie[id]) ? self.catalog.tipologie[id] : id;
                 }).join(', ');
+            }
+
+            if (rule.source_type === 'participant_field') {
+                var lookupMaps = {
+                    centro: 'centri',
+                    soggiorno: 'centri',
+                    type_course_id: 'course_types',
+                    title_course_id: 'course_titles',
+                    course_category: 'course_categories'
+                };
+                var mapKey = lookupMaps[rule.source_key];
+                if (mapKey && this.catalog[mapKey]) {
+                    var map = this.catalog[mapKey];
+                    if (rule.operator === 'in' || rule.operator === 'not in') {
+                        return $.map(String(value).split(','), function(id) {
+                            id = $.trim(id);
+                            return map[id] || id;
+                        }).join(', ');
+                    }
+                    return map[value] || value;
+                }
             }
 
             if (rule.source_type === 'question_answer' && this.catalog.questions && this.catalog.questions[rule.source_key]) {

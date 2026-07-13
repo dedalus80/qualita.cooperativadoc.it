@@ -972,20 +972,36 @@ function evaluateVisibilityRuleset(ruleset, context) {
     return VisibilityRulesEvaluator.evaluate(ruleset, context);
 }
 
-// Funzione per aggiornare la visibilità delle sezioni
-function updateSectionVisibility() {
-    const participantData = {
+function getParticipantVisibilityContext() {
+    return {
         tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
         tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
         soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
         centro: $('#QuestionnaireParticipant_soggiorno_id').val(),
+        soggiorno: $('#QuestionnaireParticipant_soggiorno_id').val(),
         age: $('#QuestionnaireParticipant_age').val(),
         eta: $('#QuestionnaireParticipant_age').val(),
-        soggiorno: $('#QuestionnaireParticipant_soggiorno_id').val(),
         turno_id: $('#QuestionnaireParticipant_turno_id').val(),
         turno: $('#QuestionnaireParticipant_turno_id').val(),
+        name: $('#QuestionnaireParticipant_name').val(),
+        surname: $('#QuestionnaireParticipant_surname').val(),
+        email: $('#QuestionnaireParticipant_email').val(),
+        phone: $('#QuestionnaireParticipant_phone').val(),
+        group_name: $('#QuestionnaireParticipant_group_name').val(),
+        coordinator_name: $('#QuestionnaireParticipant_coordinator_name').val(),
+        coordinator_surname: $('#QuestionnaireParticipant_coordinator_surname').val(),
+        date_course: $('#QuestionnaireParticipant_date_course').val(),
+        type_course_id: $('#QuestionnaireParticipant_type_course_id').val(),
+        title_course_id: $('#QuestionnaireParticipant_title_course_id').val(),
+        course_category: $('#course_category').val(),
+        affiliated_organisation: $('#QuestionnaireParticipant_affiliated_organisation').val(),
         anno: new Date().getFullYear().toString()
     };
+}
+
+// Funzione per aggiornare la visibilità delle sezioni
+function updateSectionVisibility() {
+    const participantData = getParticipantVisibilityContext();
 
     const answers = collectCurrentAnswers();
 
@@ -1073,14 +1089,7 @@ function isQuestionVisible(questionItem) {
         return true;
     }
 
-    const participantData = {
-        tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
-        tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
-        soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
-        age: $('#QuestionnaireParticipant_age').val(),
-        eta: $('#QuestionnaireParticipant_age').val(),
-        anno: new Date().getFullYear().toString()
-    };
+    const participantData = getParticipantVisibilityContext();
 
     return evaluateVisibilityRuleset(ruleset, {
         participant: participantData,
@@ -1406,6 +1415,11 @@ $(document).ready(function() {
 
     courseCategoryField.on('change', function() {
         populateCourseTitles($(this).val(), '');
+        updateSectionVisibility();
+    });
+
+    $('#participant-data-section').on('change', ':input', function() {
+        updateConditionalQuestions();
     });
 
     if (questionnaireType === 'F') {
@@ -1438,14 +1452,7 @@ $(document).ready(function() {
                 return;
             }
 
-            const participantData = {
-                tipologia_soggiorno_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
-                tipologia_id: $('#QuestionnaireParticipant_tipologia_soggiorno_id').val(),
-                soggiorno_id: $('#QuestionnaireParticipant_soggiorno_id').val(),
-                age: $('#QuestionnaireParticipant_age').val(),
-                eta: $('#QuestionnaireParticipant_age').val(),
-                anno: new Date().getFullYear().toString()
-            };
+            const participantData = getParticipantVisibilityContext();
 
             const shouldShow = evaluateVisibilityRuleset(ruleset, {
                 participant: participantData,

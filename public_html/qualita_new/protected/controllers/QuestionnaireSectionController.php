@@ -114,6 +114,16 @@ class QuestionnaireSectionController extends Controller
 
                     if (isset($sectionData['visibility_ruleset'])) {
                         $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
+                        $rulesetError = VisibilityRulesHelper::validateRulesetForVersion(
+                            $rulesetData,
+                            'section',
+                            (int) $section->order,
+                            null,
+                            (int) $version_id
+                        );
+                        if ($rulesetError) {
+                            throw new Exception('Sezione "' . $section->title . '": ' . $rulesetError);
+                        }
                         VisibilityRulesHelper::syncRuleset('section', $section->id, $rulesetData);
                         VisibilityRulesHelper::syncLegacySectionFields($section, $rulesetData);
                         $section->save(false);
@@ -230,7 +240,7 @@ class QuestionnaireSectionController extends Controller
 
                         if (isset($sectionData['visibility_ruleset'])) {
                             $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
-                            $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+                            $linearError = VisibilityRulesHelper::validateRulesetForVersion(
                                 $rulesetData,
                                 'section',
                                 (int) $section->order,
@@ -319,7 +329,7 @@ class QuestionnaireSectionController extends Controller
 
                         if (isset($sectionData['visibility_ruleset'])) {
                             $rulesetData = VisibilityRulesHelper::parseRulesetJson($sectionData['visibility_ruleset']);
-                            $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+                            $linearError = VisibilityRulesHelper::validateRulesetForVersion(
                                 $rulesetData,
                                 'section',
                                 (int) $section->order,
@@ -561,7 +571,7 @@ class QuestionnaireSectionController extends Controller
     private function syncQuestionVisibilityRuleset(Question $question, array $rulesetData, $versionId)
     {
         $section = $question->section ? $question->section : QuestionnaireSection::model()->findByPk($question->section_id);
-        $linearError = VisibilityRulesHelper::validateRulesetLinearOrder(
+        $linearError = VisibilityRulesHelper::validateRulesetForVersion(
             $rulesetData,
             'question',
             $section ? (int) $section->order : 0,

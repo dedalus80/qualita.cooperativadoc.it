@@ -14,7 +14,8 @@
 
                 <p class="text-muted small visibility-rules-linear-hint">
                     <i class="fa fa-info-circle"></i>
-                    Per coerenza con l'ordine di compilazione, come condizione è possibile selezionare solo domande già mostrate prima di questa sezione/domanda.
+                    <strong>Campo partecipante</strong>: dati anagrafici del partecipante (tipologia, centro, turno, ecc.).
+                    <strong>Risposta domanda</strong>: domande già mostrate prima nell'ordine di compilazione, anche nelle sezioni precedenti.
                 </p>
 
                 <div class="form-group">

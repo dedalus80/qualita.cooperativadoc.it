@@ -32,7 +32,7 @@ $jsonValue = CJSON::encode($rulesetData);
             </button>
         <?php endif; ?>
     </div>
-    <div class="visibility-rules-summary text-muted small" style="<?php echo $summary ? '' : 'display:none;'; ?>">
+    <div class="visibility-rules-summary text-secondary small" style="<?php echo $summary ? '' : 'display:none;'; ?>">
         <i class="fa fa-filter"></i>
         <span class="visibility-rules-summary-text"><?php echo CHtml::encode($summary); ?></span>
     </div>

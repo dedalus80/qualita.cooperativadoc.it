@@ -40,6 +40,13 @@ Yii::app()->clientScript->registerScript(
     </button>
 </div>
 
+<style>
+.section-drag-handle,
+.question-drag-handle {
+    cursor: move;
+}
+</style>
+
 <form method="post" id="edit-full-form">
     <div id="sections-container" class="sortable-sections">
         <?php foreach ($sections as $section): ?>
@@ -53,6 +60,9 @@ Yii::app()->clientScript->registerScript(
                                 <i class="fa fa-trash"></i>
                             </button>
                             <?php endif; ?>
+                            <span class="btn btn-xs btn-default section-drag-handle" title="clicca e trascina per ordinare">
+                                <i class="fa fa-arrows"></i>
+                            </span>
                             <button type="button" class="btn btn-xs btn-default toggle-section-btn">
                                 <i class="fa fa-minus"></i>
                             </button>
@@ -99,6 +109,9 @@ Yii::app()->clientScript->registerScript(
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                             <?php endif; ?>
+                                            <span class="btn btn-xs btn-default question-drag-handle" title="clicca e trascina per ordinare">
+                                                <i class="fa fa-arrows"></i>
+                                            </span>
                                             <button type="button" class="btn btn-xs btn-default toggle-question-btn">
                                                 <i class="fa fa-plus"></i>
                                             </button>
@@ -230,6 +243,9 @@ $(function(){
                         <button type="button" class="btn btn-xs btn-danger delete-section-btn" title="Elimina sezione">
                             <i class="fa fa-trash"></i>
                         </button>
+                        <span class="btn btn-xs btn-default section-drag-handle" title="clicca e trascina per ordinare">
+                            <i class="fa fa-arrows"></i>
+                        </span>
                         <button type="button" class="btn btn-xs btn-default toggle-section-btn">
                             <i class="fa fa-minus"></i>
                         </button>
@@ -309,6 +325,9 @@ $(function(){
                         <button type="button" class="btn btn-xs btn-danger delete-question-btn" title="Elimina domanda">
                             <i class="fa fa-trash"></i>
                         </button>
+                                            <span class="btn btn-xs btn-default question-drag-handle" title="clicca e trascina per ordinare">
+                            <i class="fa fa-arrows"></i>
+                        </span>
                         <button type="button" class="btn btn-xs btn-default toggle-question-btn">
                             <i class="fa fa-minus"></i>
                         </button>
@@ -469,8 +488,8 @@ $(function(){
         }
         \$container.sortable({
             items: '> .question-block',
-            handle: '> .panel-heading',
-            cancel: 'input,textarea,button,select,option,a,.btn',
+            handle: '.question-drag-handle',
+            cancel: 'input,textarea,button,select,option,a',
             update: function(){
                 updateQuestionOrder($(this).closest('.section-block'));
             }
@@ -480,8 +499,8 @@ $(function(){
     // Sortable sezioni
     $('#sections-container').sortable({
         items: '> .section-block',
-        handle: '> .panel-heading',
-        cancel: 'input,textarea,button,select,option,a,.btn',
+        handle: '.section-drag-handle',
+        cancel: 'input,textarea,button,select,option,a',
         update: function(){
             $('.section-block').each(function(index){
                 $(this).find('.section-order').val(index + 1);

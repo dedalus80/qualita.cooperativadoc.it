@@ -91,9 +91,21 @@ Yii::app()->clientScript->registerScript(
                         <?php foreach ($section->questions as $question): ?>
                             <div class="panel panel-info question-block" data-id="<?php echo $question->id; ?>">
                                 <div class="panel-heading">
-                                    <h4 class="panel-title"><?php echo CHtml::encode($question->text); ?></h4>
+                                    <h4 class="panel-title">
+                                        <span class="question-title-text"><?php echo CHtml::encode($question->text); ?></span>
+                                        <span class="pull-right">
+                                            <?php if (!$question->hasResponses()): ?>
+                                            <button type="button" class="btn btn-xs btn-danger delete-question-btn" title="Elimina domanda">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                            <?php endif; ?>
+                                            <button type="button" class="btn btn-xs btn-default toggle-question-btn">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </span>
+                                    </h4>
                                 </div>
-                                <div class="panel-body">
+                                <div class="panel-body" style="display:none;">
                                     <div class="form-group">
                                         <label>Testo Domanda</label>
                                         <input type="text" name="sections[<?php echo $section->id; ?>][questions][<?php echo $question->id; ?>][text]" class="form-control" value="<?php echo CHtml::encode($question->text); ?>" required>
@@ -169,13 +181,6 @@ Yii::app()->clientScript->registerScript(
                                         'catalog' => $catalog,
                                         'checkboxLabel' => 'Abilita condizioni per mostrare questa domanda',
                                     )); ?>
-                                    <?php if (!$hasResponses): ?>
-                                    <div class="form-group">
-                                        <button type="button" class="btn btn-danger delete-question-btn">
-                                            <i class="fa fa-trash"></i> Elimina
-                                        </button>
-                                    </div>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -297,7 +302,17 @@ $(function(){
         let html = `
         <div class="panel panel-success question-block" data-id="new-`+sectionId+`-`+questionCount+`">
             <div class="panel-heading">
-                <h4 class="panel-title">Nuova Domanda #`+questionCount+`</h4>
+                <h4 class="panel-title">
+                    <span class="question-title-text">Nuova Domanda #`+questionCount+`</span>
+                    <span class="pull-right">
+                        <button type="button" class="btn btn-xs btn-danger delete-question-btn" title="Elimina domanda">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-default toggle-question-btn">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </span>
+                </h4>
             </div>
             <div class="panel-body">
                 <div class="form-group">
@@ -379,15 +394,13 @@ $(function(){
     function updateQuestionNumbers(sectionBlock) {
         let questionBlocks = sectionBlock.find('.question-block');
         questionBlocks.each(function(index) {
-            let title = $(this).find('.panel-title');
+            let titleText = $(this).find('.question-title-text');
             let orderInput = $(this).find('input[name*="[order]"]');
-            
-            // Aggiorna il titolo
-            if (title.text().includes('Domanda #')) {
-                title.text('Domanda #' + (index + 1));
+
+            if (titleText.length && titleText.text().match(/Domanda #|Nuova Domanda #/)) {
+                titleText.text('Domanda #' + (index + 1));
             }
-            
-            // Aggiorna l'ordine se non è stato modificato manualmente
+
             if (orderInput.val() == orderInput.attr('data-original-order') || !orderInput.attr('data-original-order')) {
                 orderInput.val(index + 1);
                 orderInput.attr('data-original-order', index + 1);
@@ -397,14 +410,19 @@ $(function(){
 
     // Delete domanda con conferma
     $(document).on('click', '.delete-question-btn', function(){
-        if(confirm('Sei sicuro di voler eliminare questa domanda? Una volta cliccato su `Salva Modifiche`, la domanda sarà eliminata definitivamente.')) {
-            let questionBlock = $(this).closest('.question-block');
-            let sectionBlock = questionBlock.closest('.section-block');
-            let questionId = questionBlock.data('id');
-            $('#edit-full-form').append('<input type="hidden" name="delete_questions[]" value="'+questionId+'">');
+        let questionBlock = $(this).closest('.question-block');
+        let sectionBlock = questionBlock.closest('.section-block');
+        let questionId = questionBlock.data('id');
+        let isNewQuestion = !/^\d+$/.test(String(questionId));
+        let confirmMessage = isNewQuestion
+            ? 'Sei sicuro di voler eliminare questa domanda?'
+            : 'Sei sicuro di voler eliminare questa domanda? Una volta cliccato su `Salva Modifiche`, la domanda sarà eliminata definitivamente.';
+
+        if (confirm(confirmMessage)) {
+            if (!isNewQuestion) {
+                $('#edit-full-form').append('<input type="hidden" name="delete_questions[]" value="'+questionId+'">');
+            }
             questionBlock.remove();
-            
-            // Aggiorna i numeri delle domande dopo l'eliminazione
             updateQuestionNumbers(sectionBlock);
         }
     });
@@ -432,7 +450,15 @@ $(function(){
     // Toggle sezione
     $(document).on('click', '.toggle-section-btn', function(){
         let btn = $(this);
-        let panelBody = btn.closest('.section-block').find('.panel-body');
+        let panelBody = btn.closest('.section-block').children('.panel-body');
+        panelBody.slideToggle();
+        btn.find('i').toggleClass('fa-minus fa-plus');
+    });
+
+    // Toggle domanda
+    $(document).on('click', '.toggle-question-btn', function(){
+        let btn = $(this);
+        let panelBody = btn.closest('.question-block').children('.panel-body');
         panelBody.slideToggle();
         btn.find('i').toggleClass('fa-minus fa-plus');
     });
@@ -455,20 +481,20 @@ $(function(){
         }
     });
 
-    // Espandi sezioni nascoste al submit per evitare errori di focus
+    // Espandi sezioni e domande nascoste al submit per evitare errori di focus
     $('#edit-full-form').submit(function(){
-        $('.panel-body:hidden').slideDown();
+        $('.section-block > .panel-body:hidden, .question-block > .panel-body:hidden').slideDown();
     });
 
     // All'apertura, chiudi tutte le sezioni
-    $('.panel-body').hide();
+    $('.section-block > .panel-body').hide();
     $('.toggle-section-btn i').removeClass('fa-minus').addClass('fa-plus');
 
     // Toggle globale tutte le sezioni
     $('#toggle-all-sections').click(function(){
-        let anyClosed = $('.panel-body:hidden').length > 0;
+        let anyClosed = $('.section-block > .panel-body:hidden').length > 0;
 
-        $('.panel-body').each(function(){
+        $('.section-block > .panel-body').each(function(){
             if(anyClosed){
                 $(this).slideDown();
             } else {

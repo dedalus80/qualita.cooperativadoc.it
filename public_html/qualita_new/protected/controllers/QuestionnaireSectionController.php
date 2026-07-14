@@ -224,7 +224,6 @@ class QuestionnaireSectionController extends Controller
             'order'=>'t.order ASC, questions.order ASC'
         ));
 
-        $hasResponses = $version->hasResponses();
 
         if (isset($_POST['sections']) || isset($_POST['new_sections']) || isset($_POST['new_questions']) || isset($_POST['delete_questions']) || isset($_POST['delete_sections'])) {
             $transaction = Yii::app()->db->beginTransaction();
@@ -488,13 +487,17 @@ class QuestionnaireSectionController extends Controller
                     }
                 }
 
-                if (!$hasResponses && isset($_POST['delete_questions'])) {
+                if (isset($_POST['delete_questions'])) {
                     foreach ($_POST['delete_questions'] as $question_id) {
-                        $question = Question::model()->findByPk($question_id);
-                        if ($question) $question->delete();
+                        $question = Question::model()->with('section')->findByPk($question_id);
+                        if (!$question || !$question->section || (int) $question->section->version_id !== (int) $version_id) {
+                            continue;
+                        }
+                        if ($question->hasResponses()) {
+                            throw new Exception('Impossibile eliminare la domanda "' . $question->text . '": sono presenti risposte registrate.');
+                        }
+                        $this->deleteQuestionWithRelations($question);
                     }
-                } elseif ($hasResponses && isset($_POST['delete_questions'])) {
-                    throw new Exception('Impossibile eliminare domande: la versione ha compilazioni registrate.');
                 }
 
                 $transaction->commit();
@@ -512,7 +515,6 @@ class QuestionnaireSectionController extends Controller
         $this->render('editFull', array(
             'version' => $version,
             'sections' => $sections,
-            'hasResponses' => $hasResponses,
             'catalog' => $catalog,
         ));
     }
@@ -534,13 +536,23 @@ class QuestionnaireSectionController extends Controller
     private function deleteSectionWithQuestions(QuestionnaireSection $section)
     {
         foreach ($section->questions as $question) {
-            QuestionOption::model()->deleteAllByAttributes(array('question_id' => $question->id));
-            VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
-            $question->delete();
+            $this->deleteQuestionWithRelations($question);
         }
 
         VisibilityRulesHelper::syncRuleset('section', $section->id, VisibilityRulesHelper::emptyRuleset());
         $section->delete();
+    }
+
+    /**
+     * Elimina una domanda con opzioni e regole di visibilità collegate.
+     *
+     * @param Question $question
+     */
+    private function deleteQuestionWithRelations(Question $question)
+    {
+        QuestionOption::model()->deleteAllByAttributes(array('question_id' => $question->id));
+        VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
+        $question->delete();
     }
 
     /**

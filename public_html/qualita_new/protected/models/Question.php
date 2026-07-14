@@ -138,4 +138,14 @@ class Question extends CActiveRecord
             'participant' => $participant,
         ));
     }
+
+    /**
+     * Verifica se esistono risposte a questa domanda.
+     *
+     * @return bool
+     */
+    public function hasResponses()
+    {
+        return Answer::model()->exists('question_id = :question_id', array(':question_id' => $this->id));
+    }
 }

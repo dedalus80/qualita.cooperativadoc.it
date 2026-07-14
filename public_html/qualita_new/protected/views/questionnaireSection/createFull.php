@@ -75,6 +75,10 @@ $(function(){
     function updateQuestionOrder(sectionBlock) {
         sectionBlock.find('.question-block').each(function(index){
             $(this).find('input.question-order').val(index+1);
+            let titleText = $(this).find('.question-title-text');
+            if (titleText.length) {
+                titleText.text('Domanda #' + (index + 1));
+            }
         });
     }
 
@@ -149,7 +153,17 @@ $(function(){
         let questionHtml = `
         <div class="panel panel-info question-block" data-id="new-`+sectionIndex+`-`+questionCount+`">
             <div class="panel-heading">
-                <h4 class="panel-title">Domanda #`+questionCount+`</h4>
+                <h4 class="panel-title">
+                    <span class="question-title-text">Domanda #`+questionCount+`</span>
+                    <span class="pull-right">
+                        <button type="button" class="btn btn-xs btn-danger delete-question-btn" title="Elimina domanda">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-default toggle-question-btn">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </span>
+                </h4>
             </div>
             <div class="panel-body">
                 <div class="form-group">
@@ -227,7 +241,16 @@ $(function(){
 
     $(document).on('click', '.toggle-section-btn', function(){
         let btn = $(this);
-        let panelBody = btn.closest('.section-block').find('.panel-body');
+        let panelBody = btn.closest('.section-block').children('.panel-body');
+        panelBody.slideToggle();
+
+        let icon = btn.find('i');
+        icon.toggleClass('fa-minus fa-plus');
+    });
+
+    $(document).on('click', '.toggle-question-btn', function(){
+        let btn = $(this);
+        let panelBody = btn.closest('.question-block').children('.panel-body');
         panelBody.slideToggle();
 
         let icon = btn.find('i');
@@ -241,11 +264,19 @@ $(function(){
         }
     });
 
+    $(document).on('click', '.delete-question-btn', function(){
+        if (confirm('Sei sicuro di voler eliminare questa domanda?')) {
+            let sectionBlock = $(this).closest('.section-block');
+            $(this).closest('.question-block').remove();
+            updateQuestionOrder(sectionBlock);
+        }
+    });
+
     // Toggle globale tutte le sezioni
     $('#toggle-all-sections').click(function(){
-        let anyClosed = $('.panel-body:hidden').length > 0;
+        let anyClosed = $('.section-block > .panel-body:hidden').length > 0;
 
-        $('.panel-body').each(function(){
+        $('.section-block > .panel-body').each(function(){
             if(anyClosed){
                 $(this).slideDown();
             } else {
@@ -279,9 +310,9 @@ $(function(){
         });
     });
 
-    // Espandi sezioni nascoste al submit per evitare errori di focus
+    // Espandi sezioni e domande nascoste al submit per evitare errori di focus
     $('#full-questionnaire-form').submit(function(){
-        $('.panel-body:hidden').slideDown();
+        $('.section-block > .panel-body:hidden, .question-block > .panel-body:hidden').slideDown();
     });
 });
 

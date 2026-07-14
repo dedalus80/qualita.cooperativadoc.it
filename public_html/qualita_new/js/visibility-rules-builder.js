@@ -459,6 +459,17 @@
 
                 $.each(groupOrder, function(_, groupKey) {
                     var group = groups[groupKey];
+                    group.questions.sort(function(a, b) {
+                        var orderA = parseInt(a.question.question_order, 10);
+                        var orderB = parseInt(b.question.question_order, 10);
+                        if (isNaN(orderA)) {
+                            orderA = 0;
+                        }
+                        if (isNaN(orderB)) {
+                            orderB = 0;
+                        }
+                        return orderA - orderB;
+                    });
                     html += '<optgroup label="' + selfEscape(group.sectionTitle) + '">';
                     $.each(group.questions, function(_, item) {
                         html += '<option value="' + item.id + '"' + (String(rule.source_key) === String(item.id) ? ' selected' : '') + '>'

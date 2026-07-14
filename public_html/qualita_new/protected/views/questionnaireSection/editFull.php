@@ -281,6 +281,7 @@ $(function(){
             </div>
         </div>`;
         $('#sections-container').append(html);
+        initQuestionsSortable($('#sections-container .section-block').last().find('.questions-container'));
     });
 
     // Aggiungi nuova domanda (event delegation per sezioni esistenti e nuove)
@@ -387,24 +388,21 @@ $(function(){
         container.append(html);
         
         // Aggiorna i numeri delle domande dopo l'aggiunta
-        updateQuestionNumbers(sectionBlock);
+        updateQuestionOrder(sectionBlock);
     });
-    
-    // Funzione per aggiornare i numeri delle domande
-    function updateQuestionNumbers(sectionBlock) {
-        let questionBlocks = sectionBlock.find('.question-block');
-        questionBlocks.each(function(index) {
+
+    // Aggiorna ordine domande nella sezione (usato da drag-and-drop, aggiunta e rimozione)
+    function updateQuestionOrder(sectionBlock) {
+        sectionBlock.find('.question-block').each(function(index) {
             let titleText = $(this).find('.question-title-text');
-            let orderInput = $(this).find('input[name*="[order]"]');
+            let orderInput = $(this).find('input.question-order, input[name*="[order]"]').first();
 
             if (titleText.length && titleText.text().match(/Domanda #|Nuova Domanda #/)) {
                 titleText.text('Domanda #' + (index + 1));
             }
 
-            if (orderInput.val() == orderInput.attr('data-original-order') || !orderInput.attr('data-original-order')) {
-                orderInput.val(index + 1);
-                orderInput.attr('data-original-order', index + 1);
-            }
+            orderInput.val(index + 1);
+            orderInput.attr('data-original-order', index + 1);
         });
     }
 
@@ -423,7 +421,7 @@ $(function(){
                 $('#edit-full-form').append('<input type="hidden" name="delete_questions[]" value="'+questionId+'">');
             }
             questionBlock.remove();
-            updateQuestionNumbers(sectionBlock);
+            updateQuestionOrder(sectionBlock);
         }
     });
 
@@ -448,7 +446,8 @@ $(function(){
     });
 
     // Toggle sezione
-    $(document).on('click', '.toggle-section-btn', function(){
+    $(document).on('click', '.toggle-section-btn', function(e){
+        e.stopPropagation();
         let btn = $(this);
         let panelBody = btn.closest('.section-block').children('.panel-body');
         panelBody.slideToggle();
@@ -456,29 +455,42 @@ $(function(){
     });
 
     // Toggle domanda
-    $(document).on('click', '.toggle-question-btn', function(){
+    $(document).on('click', '.toggle-question-btn', function(e){
+        e.stopPropagation();
         let btn = $(this);
         let panelBody = btn.closest('.question-block').children('.panel-body');
         panelBody.slideToggle();
         btn.find('i').toggleClass('fa-minus fa-plus');
     });
 
-    // Sortable
+    function initQuestionsSortable(\$container) {
+        if (!\$container.length || \$container.hasClass('ui-sortable')) {
+            return;
+        }
+        \$container.sortable({
+            items: '> .question-block',
+            handle: '> .panel-heading',
+            cancel: 'input,textarea,button,select,option,a,.btn',
+            update: function(){
+                updateQuestionOrder($(this).closest('.section-block'));
+            }
+        });
+    }
+
+    // Sortable sezioni
     $('#sections-container').sortable({
-        handle: '.panel-heading',
+        items: '> .section-block',
+        handle: '> .panel-heading',
+        cancel: 'input,textarea,button,select,option,a,.btn',
         update: function(){
             $('.section-block').each(function(index){
-                $(this).find('.section-order').val(index+1);
+                $(this).find('.section-order').val(index + 1);
             });
         }
     });
-    $('.questions-container').sortable({
-        handle: '.panel-heading',
-        update: function(){
-            $('.question-block').each(function(index){
-                $(this).find('.question-order').val(index+1);
-            });
-        }
+
+    $('.questions-container').each(function(){
+        initQuestionsSortable($(this));
     });
 
     // Espandi sezioni e domande nascoste al submit per evitare errori di focus
@@ -611,7 +623,7 @@ $(function(){
 
     // Inizializza i numeri delle domande al caricamento della pagina
     $('.section-block').each(function(){
-        updateQuestionNumbers($(this));
+        updateQuestionOrder($(this));
     });
 });
 JS

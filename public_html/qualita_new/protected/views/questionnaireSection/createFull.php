@@ -82,6 +82,20 @@ $(function(){
         });
     }
 
+    function initQuestionsSortable(\$container) {
+        if (!\$container.length || \$container.hasClass('ui-sortable')) {
+            return;
+        }
+        \$container.sortable({
+            items: '> .question-block',
+            handle: '> .panel-heading',
+            cancel: 'input,textarea,button,select,option,a,.btn',
+            update: function(){
+                updateQuestionOrder($(this).closest('.section-block'));
+            }
+        });
+    }
+
     $('#add-section-btn').click(function(){
         sectionCount++;
         let sectionHtml = `
@@ -142,6 +156,7 @@ $(function(){
         `;
         $('#sections-container').append(sectionHtml);
         updateSectionOrder();
+        initQuestionsSortable($('#sections-container .section-block').last().find('.questions-container'));
     });
 
     $(document).on('click', '.add-question-btn', function(){
@@ -239,7 +254,8 @@ $(function(){
         updateQuestionOrder(sectionBlock);
     });
 
-    $(document).on('click', '.toggle-section-btn', function(){
+    $(document).on('click', '.toggle-section-btn', function(e){
+        e.stopPropagation();
         let btn = $(this);
         let panelBody = btn.closest('.section-block').children('.panel-body');
         panelBody.slideToggle();
@@ -248,7 +264,8 @@ $(function(){
         icon.toggleClass('fa-minus fa-plus');
     });
 
-    $(document).on('click', '.toggle-question-btn', function(){
+    $(document).on('click', '.toggle-question-btn', function(e){
+        e.stopPropagation();
         let btn = $(this);
         let panelBody = btn.closest('.question-block').children('.panel-body');
         panelBody.slideToggle();
@@ -295,19 +312,12 @@ $(function(){
     });
 
     $('#sections-container').sortable({
-        handle: '.panel-heading',
+        items: '> .section-block',
+        handle: '> .panel-heading',
+        cancel: 'input,textarea,button,select,option,a,.btn',
         update: function(){
             updateSectionOrder();
         }
-    });
-
-    $(document).on('mouseenter', '.questions-container', function(){
-        $(this).sortable({
-            handle: '.panel-heading',
-            update: function(){
-                updateQuestionOrder($(this).closest('.section-block'));
-            }
-        });
     });
 
     // Espandi sezioni e domande nascoste al submit per evitare errori di focus

@@ -47,9 +47,16 @@ Yii::app()->clientScript->registerScript(
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <?php echo CHtml::encode($section->title); ?>
-                        <button type="button" class="btn btn-xs btn-default pull-right toggle-section-btn">
-                            <i class="fa fa-minus"></i>
-                        </button>
+                        <span class="pull-right">
+                            <?php if (!$section->hasResponses()): ?>
+                            <button type="button" class="btn btn-xs btn-danger delete-section-btn" title="Elimina sezione">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                            <?php endif; ?>
+                            <button type="button" class="btn btn-xs btn-default toggle-section-btn">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </span>
                     </h3>
                 </div>
                 <div class="panel-body">
@@ -214,9 +221,14 @@ $(function(){
             <div class="panel-heading">
                 <h3 class="panel-title">
                     Nuova Sezione #`+sectionCount+`
-                    <button type="button" class="btn btn-xs btn-default pull-right toggle-section-btn">
-                        <i class="fa fa-minus"></i>
-                    </button>
+                    <span class="pull-right">
+                        <button type="button" class="btn btn-xs btn-danger delete-section-btn" title="Elimina sezione">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-default toggle-section-btn">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </span>
                 </h3>
             </div>
             <div class="panel-body">
@@ -394,6 +406,26 @@ $(function(){
             
             // Aggiorna i numeri delle domande dopo l'eliminazione
             updateQuestionNumbers(sectionBlock);
+        }
+    });
+
+    // Delete sezione con conferma
+    $(document).on('click', '.delete-section-btn', function(){
+        let sectionBlock = $(this).closest('.section-block');
+        let sectionId = sectionBlock.data('id');
+        let isNewSection = sectionBlock.hasClass('new-section') || sectionId.toString().startsWith('new_');
+        let confirmMessage = isNewSection
+            ? 'Sei sicuro di voler eliminare questa sezione?'
+            : 'Sei sicuro di voler eliminare questa sezione e tutte le sue domande? Una volta cliccato su `Salva Modifiche`, la sezione sarà eliminata definitivamente.';
+
+        if (confirm(confirmMessage)) {
+            if (!isNewSection) {
+                $('#edit-full-form').append('<input type="hidden" name="delete_sections[]" value="'+sectionId+'">');
+            }
+            sectionBlock.remove();
+            $('.section-block').each(function(index){
+                $(this).find('.section-order').val(index + 1);
+            });
         }
     });
 

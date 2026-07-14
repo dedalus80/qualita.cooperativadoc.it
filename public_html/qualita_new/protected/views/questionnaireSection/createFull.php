@@ -85,9 +85,14 @@ $(function(){
             <div class="panel-heading">
                 <h3 class="panel-title">
                     Sezione #`+sectionCount+`
-                    <button type="button" class="btn btn-xs btn-default pull-right toggle-section-btn">
-                        <i class="fa fa-minus"></i>
-                    </button>
+                    <span class="pull-right">
+                        <button type="button" class="btn btn-xs btn-danger delete-section-btn" title="Elimina sezione">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-xs btn-default toggle-section-btn">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </span>
                 </h3>
             </div>
             <div class="panel-body">
@@ -227,6 +232,13 @@ $(function(){
 
         let icon = btn.find('i');
         icon.toggleClass('fa-minus fa-plus');
+    });
+
+    $(document).on('click', '.delete-section-btn', function(){
+        if (confirm('Sei sicuro di voler eliminare questa sezione e tutte le sue domande?')) {
+            $(this).closest('.section-block').remove();
+            updateSectionOrder();
+        }
     });
 
     // Toggle globale tutte le sezioni

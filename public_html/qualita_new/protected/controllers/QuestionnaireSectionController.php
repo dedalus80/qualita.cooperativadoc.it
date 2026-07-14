@@ -226,9 +226,22 @@ class QuestionnaireSectionController extends Controller
 
         $hasResponses = $version->hasResponses();
 
-        if (isset($_POST['sections']) || isset($_POST['new_sections']) || isset($_POST['new_questions']) || isset($_POST['delete_questions'])) {
+        if (isset($_POST['sections']) || isset($_POST['new_sections']) || isset($_POST['new_questions']) || isset($_POST['delete_questions']) || isset($_POST['delete_sections'])) {
             $transaction = Yii::app()->db->beginTransaction();
             try {
+                if (isset($_POST['delete_sections'])) {
+                    foreach ($_POST['delete_sections'] as $section_id) {
+                        $section = QuestionnaireSection::model()->with('questions')->findByPk($section_id);
+                        if (!$section || (int) $section->version_id !== (int) $version_id) {
+                            continue;
+                        }
+                        if ($section->hasResponses()) {
+                            throw new Exception('Impossibile eliminare la sezione "' . $section->title . '": sono presenti risposte alle domande della sezione.');
+                        }
+                        $this->deleteSectionWithQuestions($section);
+                    }
+                }
+
                 if (isset($_POST['sections'])) {
                     foreach ($_POST['sections'] as $section_id => $sectionData) {
                         $section = QuestionnaireSection::model()->findByPk($section_id);
@@ -511,6 +524,23 @@ class QuestionnaireSectionController extends Controller
         if ($model === null)
             throw new CHttpException(404, 'Sezione non trovata.');
         return $model;
+    }
+
+    /**
+     * Elimina una sezione con tutte le domande e i dati collegati.
+     *
+     * @param QuestionnaireSection $section
+     */
+    private function deleteSectionWithQuestions(QuestionnaireSection $section)
+    {
+        foreach ($section->questions as $question) {
+            QuestionOption::model()->deleteAllByAttributes(array('question_id' => $question->id));
+            VisibilityRulesHelper::syncRuleset('question', $question->id, VisibilityRulesHelper::emptyRuleset());
+            $question->delete();
+        }
+
+        VisibilityRulesHelper::syncRuleset('section', $section->id, VisibilityRulesHelper::emptyRuleset());
+        $section->delete();
     }
 
     /**

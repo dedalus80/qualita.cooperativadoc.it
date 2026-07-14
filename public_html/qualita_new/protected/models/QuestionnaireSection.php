@@ -59,6 +59,19 @@ class QuestionnaireSection extends CActiveRecord
         ));
     }
 
+    /**
+     * Verifica se esistono risposte alle domande di questa sezione.
+     *
+     * @return bool
+     */
+    public function hasResponses()
+    {
+        return Answer::model()->exists(
+            'EXISTS (SELECT 1 FROM questions q WHERE q.id = t.question_id AND q.section_id = :section_id)',
+            array(':section_id' => $this->id)
+        );
+    }
+
     public function attributeLabels()
     {
         return array(

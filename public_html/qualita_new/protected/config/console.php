@@ -16,14 +16,14 @@ $config = array(
 	// application components
 	'components'=>array(
 		'db' => array(
-            'connectionString' => 'mysql:host=localhost;dbname=qualita',
-            'emulatePrepare' => true,
-            'username' => 'qualita',
-            'password' => '00qQUFDTOlKl6O3',
-            'charset' => 'utf8',
-            'emulatePrepare' => true,
-            'enableParamLogging'=>true,
-            'enableProfiling'=>true,
+            'connectionString'   => 'mysql:host=localhost;dbname=qualita_1_sito',
+            'emulatePrepare'     => true,
+            'username'           => 'qualita_1_sito',
+            'password'           => '^B&FpWPQ7*;TDFm',
+            'charset'            => 'utf8',
+            'enableParamLogging' => true,
+            'enableProfiling'    => true,
+            'initSQLs'           => array("SET time_zone = 'GMT';SET SESSION sql_mode = ''"),
         ),
 		'log'=>array(
 			'class'=>'CLogRouter',

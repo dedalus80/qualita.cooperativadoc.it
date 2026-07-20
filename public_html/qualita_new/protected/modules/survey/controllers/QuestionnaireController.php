@@ -183,7 +183,7 @@ class QuestionnaireController extends CController
                 }
 
                 if ($isValid && $participant->save(false)) {
-                        $answersToSave = $this->filterSubmittedAnswers($_POST['Answer'], $sections, $participant);
+                        $answersToSave = $this->filterSubmittedAnswers($_POST['Answer'], $sections, $participant, $_POST);
                         foreach ($answersToSave as $questionId => $value) {
                             $answer = new Answer();
                             $answer->setAttribute('participant_id', $participant->id);
@@ -259,53 +259,65 @@ class QuestionnaireController extends CController
      * @param QuestionnaireParticipant $participant
      * @return array
      */
-    private function filterSubmittedAnswers(array $submittedAnswers, array $sections, QuestionnaireParticipant $participant)
+    private function filterSubmittedAnswers(array $submittedAnswers, array $sections, QuestionnaireParticipant $participant, array $post = array())
     {
-        $participantContext = array(
-            'tipologia_soggiorno_id' => $participant->tipologia_soggiorno_id,
-            'tipologia_id' => $participant->tipologia_soggiorno_id,
-            'soggiorno_id' => $participant->soggiorno_id,
-            'age' => $participant->age,
-            'eta' => $participant->age,
-            'turno_id' => $participant->turno_id,
-            'anno' => date('Y'),
-        );
-
-        $answers = array();
-        foreach ($submittedAnswers as $questionId => $value) {
-            $answers[$questionId] = is_array($value) ? implode(',', $value) : $value;
+        // Costruisce l'insieme degli id di domande valide per questa versione
+        $validQuestionIds = array();
+        foreach ($sections as $section) {
+            foreach ($section->questions as $question) {
+                $validQuestionIds[$question->id] = true;
+            }
         }
 
+        // Mantieni solo le risposte che appartengono a domande reali della versione
         $filtered = array();
-        foreach ($sections as $section) {
-            $sectionRuleset = $section->getVisibilityRulesetData();
-            $sectionVisible = VisibilityRulesEvaluator::evaluate($sectionRuleset, array(
-                'participant' => $participantContext,
-                'answers' => $answers,
-            ));
-
-            if (!$sectionVisible) {
-                continue;
-            }
-
-            foreach ($section->questions as $question) {
-                if (!array_key_exists($question->id, $submittedAnswers)) {
-                    continue;
-                }
-
-                $questionRuleset = $question->getVisibilityRulesetData();
-                $questionVisible = VisibilityRulesEvaluator::evaluate($questionRuleset, array(
-                    'participant' => $participantContext,
-                    'answers' => $answers,
-                ));
-
-                if ($questionVisible) {
-                    $filtered[$question->id] = $submittedAnswers[$question->id];
-                }
+        foreach ($submittedAnswers as $questionId => $value) {
+            if (isset($validQuestionIds[$questionId])) {
+                $filtered[$questionId] = $value;
             }
         }
 
         return $filtered;
+    }
+
+    /**
+     * Costruisce il contesto partecipante per la valutazione delle regole di visibilità.
+     *
+     * @param QuestionnaireParticipant $participant
+     * @param array $post
+     * @return array
+     */
+    private function buildParticipantVisibilityContext(QuestionnaireParticipant $participant, array $post = array())
+    {
+        $context = array(
+            'tipologia_soggiorno_id' => $participant->tipologia_soggiorno_id,
+            'tipologia_id' => $participant->tipologia_soggiorno_id,
+            'soggiorno_id' => $participant->soggiorno_id,
+            'centro' => $participant->soggiorno_id,
+            'soggiorno' => $participant->soggiorno_id,
+            'age' => $participant->age,
+            'eta' => $participant->age,
+            'turno_id' => $participant->turno_id,
+            'turno' => $participant->turno_id,
+            'name' => $participant->name,
+            'surname' => $participant->surname,
+            'email' => $participant->email,
+            'phone' => $participant->phone,
+            'group_name' => $participant->group_name,
+            'coordinator_name' => $participant->coordinator_name,
+            'coordinator_surname' => $participant->coordinator_surname,
+            'date_course' => $participant->date_course,
+            'type_course_id' => $participant->type_course_id,
+            'title_course_id' => $participant->title_course_id,
+            'affiliated_organisation' => $participant->affiliated_organisation,
+            'anno' => date('Y'),
+        );
+
+        if (isset($post['course_category'])) {
+            $context['course_category'] = $post['course_category'];
+        }
+
+        return $context;
     }
 
     /**

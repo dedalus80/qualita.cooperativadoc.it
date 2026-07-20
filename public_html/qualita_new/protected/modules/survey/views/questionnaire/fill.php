@@ -1021,6 +1021,7 @@ function updateSectionVisibility() {
             sectionElement.find(':input').prop('disabled', false).fadeIn(200);
         } else {
             sectionElement.slideUp(300).fadeOut(300);
+            clearAnswerInputs(sectionElement);
             sectionElement.find(':input').prop('disabled', true).fadeOut(200);
         }
     });
@@ -1124,7 +1125,11 @@ function getStays(t) {
 
 // Google reCAPTCHA v3
 function executeRecaptcha() {
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
+        if (typeof grecaptcha === 'undefined') {
+            reject(new Error('reCAPTCHA non disponibile'));
+            return;
+        }
         grecaptcha.ready(function() {
             grecaptcha.execute('6LegKYYrAAAAANV_8qfnDL3foGBxHEMMUnqqHEzG', {action: 'questionnaire_submit'})
             .then(function(token) {
@@ -1139,16 +1144,102 @@ function executeRecaptcha() {
     });
 }
 
+function isRadioGroupChecked(name) {
+    var radios = document.querySelectorAll('input[type=\"radio\"]');
+    for (var i = 0; i < radios.length; i++) {
+        if (radios[i].name === name && radios[i].checked && !radios[i].disabled) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isSectionVisible(sectionElement) {
+    var rulesAttr = sectionElement.attr('data-visibility-rules');
+    if (!rulesAttr) {
+        return sectionElement.is(':visible');
+    }
+
+    try {
+        return evaluateVisibilityRuleset(JSON.parse(rulesAttr), {
+            participant: getParticipantVisibilityContext(),
+            answers: collectCurrentAnswers()
+        });
+    } catch (e) {
+        return sectionElement.is(':visible');
+    }
+}
+
+function clearAnswerInputs(container) {
+    container.find('input[type=\"radio\"], input[type=\"checkbox\"]').prop('checked', false);
+    container.find('select').each(function() {
+        if ($(this).prop('multiple')) {
+            $(this).val([]);
+        } else {
+            $(this).val('');
+        }
+    });
+    container.find('textarea').val('');
+}
+
+function isQuestionVisibleInForm(questionItem) {
+    var section = questionItem.closest('[data-section-id]');
+    if (section.length > 0 && !isSectionVisible(section)) {
+        return false;
+    }
+    if (questionItem.attr('data-visibility-rules')) {
+        return isQuestionVisible(questionItem);
+    }
+    return true;
+}
+
+function syncFormFieldsForSubmit() {
+    if (questionnaireType === 'A') {
+        $('#participant-data-section :input').prop('disabled', true);
+    } else {
+        $('#participant-data-section :input').prop('disabled', false);
+        $('[data-field]').each(function() {
+            var fieldElement = $(this);
+            var allowedTypes = (fieldElement.attr('data-questionnaire-types') || '').split(',');
+            var visible = allowedTypes.indexOf(questionnaireType) !== -1;
+            fieldElement.find(':input').prop('disabled', !visible);
+        });
+    }
+
+    $('.question-item').each(function() {
+        var questionItem = $(this);
+        if (isQuestionVisibleInForm(questionItem)) {
+            questionItem.find(':input, textarea, select, .multiple-checkbox').prop('disabled', false);
+        } else {
+            clearAnswerInputs(questionItem);
+            questionItem.find(':input, textarea, select, .multiple-checkbox').prop('disabled', true);
+        }
+    });
+}
+
+function prepareFormForSubmit(form) {
+    syncFormFieldsForSubmit();
+}
+
+function submitFormNative(form) {
+    HTMLFormElement.prototype.submit.call(form);
+}
+
 // Bootstrap 5 form validation con reCAPTCHA
 (function () {
     'use strict';
     window.addEventListener('load', function () {
         var forms = document.getElementsByClassName('needs-validation');
         Array.prototype.filter.call(forms, function (form) {
+            var isSending = false;
             form.addEventListener('submit', function (event) {
+                if (isSending) {
+                    return;
+                }
+
                 event.preventDefault();
-            
-                
+                syncFormFieldsForSubmit();
+
                 // Validazione manuale per tutti i campi
                 var hasErrors = false;
                 
@@ -1173,7 +1264,7 @@ function executeRecaptcha() {
                         var questionSection = questionItem.closest('[data-section-id]');
                         
                         // Salta la validazione se la sezione è nascosta (per tipo A o sezioni condizionali)
-                        if (questionSection.length > 0 && !questionSection.is(':visible')) {
+                        if (questionSection.length > 0 && !isSectionVisible(questionSection)) {
             
                             return;
                         }
@@ -1185,7 +1276,7 @@ function executeRecaptcha() {
                         }
                         
                         radioGroups[name] = {
-                            checked: $('input[name=\"' + name + '\"]:checked').length > 0,
+                            checked: isRadioGroupChecked(name),
                             errorDiv: questionItem.find('.invalid-feedback')
                         };
                     }
@@ -1214,7 +1305,7 @@ function executeRecaptcha() {
                         var questionSection = questionItem.closest('[data-section-id]');
                         
                         // Salta la validazione se la sezione è nascosta (per tipo A o sezioni condizionali)
-                        if (questionSection.length > 0 && !questionSection.is(':visible')) {
+                        if (questionSection.length > 0 && !isSectionVisible(questionSection)) {
             
                             return;
                         }
@@ -1254,7 +1345,7 @@ function executeRecaptcha() {
                     var questionSection = questionItem.closest('[data-section-id]');
 
                     if (questionItem.length > 0) {
-                        if (questionSection.length > 0 && !questionSection.is(':visible')) {
+                        if (questionSection.length > 0 && !isSectionVisible(questionSection)) {
                             return;
                         }
                         if (questionItem.attr('data-visibility-rules') && !isQuestionVisible(questionItem)) {
@@ -1277,7 +1368,7 @@ function executeRecaptcha() {
                 });
                 
                 // Controlla i campi di testo obbligatori (escludendo radio button, solo quelli visibili)
-                $('input[type=\"text\"][required], input[type=\"email\"][required], textarea[required]').each(function() {
+                $('input[type=\"text\"][required], input[type=\"email\"][required], input[type=\"date\"][required], textarea[required]').each(function() {
                     var textElement = $(this);
                     var fieldContainer = textElement.closest('[data-field]');
                     var questionSection = textElement.closest('[data-section-id]');
@@ -1286,7 +1377,7 @@ function executeRecaptcha() {
                     // Controlla solo se il campo è visibile (non nascosto dal tipo di questionario)
                     if (fieldContainer.length === 0 || fieldContainer.is(':visible')) {
                         // Controlla anche se la sezione della domanda è visibile
-                        if (questionSection.length > 0 && !questionSection.is(':visible')) {
+                        if (questionSection.length > 0 && !isSectionVisible(questionSection)) {
     
                             return;
                         }
@@ -1303,8 +1394,10 @@ function executeRecaptcha() {
 
                         
                         if (!value || value.trim() === '') {
-
+                            errorDiv.addClass('d-block');
                             hasErrors = true;
+                        } else {
+                            errorDiv.removeClass('d-block');
                         }
                     } else {
 
@@ -1326,14 +1419,23 @@ function executeRecaptcha() {
 
                 
                 // Se la validazione passa, esegui reCAPTCHA e invia il form
+                var submitButton = form.querySelector('button[type=\"submit\"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
                 executeRecaptcha()
-                .then(function(token) {
-                    
+                .then(function() {
                     form.classList.add('was-validated');
-                    form.submit();
+                    prepareFormForSubmit(form);
+                    isSending = true;
+                    submitFormNative(form);
                 })
                 .catch(function(error) {
                     console.error('reCAPTCHA failed:', error);
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
                     alert('Errore nella verifica di sicurezza. Riprova.');
                 });
             }, false);
@@ -1464,6 +1566,7 @@ $(document).ready(function() {
                 questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', false);
             } else {
                 questionElement.slideUp(300);
+                clearAnswerInputs(questionElement);
                 questionElement.find('input, textarea, select, .multiple-checkbox').prop('disabled', true);
             }
         });

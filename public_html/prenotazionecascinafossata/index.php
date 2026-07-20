@@ -27,7 +27,7 @@
 //~ require_once(ABSPATH . 'wp-register/includes/lang.php');
 
 	// FROM SHARING 
-	$db = new MySql_DB("localhost", "qualita", "qualita", "00qQUFDTOlKl6O3", true, "utf8"); 
+	$db = new MySql_DB("localhost", "qualita_1_sito", "qualita_1_sito", '^B&FpWPQ7*;TDFm', true, "utf8"); 
 
 	$nazionalita    = $db->CycleAssochId($db->Query("SELECT id, nome FROM doc_nazioni   "));
 	$occupazione    = $db->CycleAssochId($db->Query("SELECT id, nome_" .LANG. " as nome FROM doc_occupazioni"));
@@ -58,8 +58,8 @@
         <meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>Cascina Fossata ::: modulo prenotazioni</title>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" crossorigin="anonymous" />
+		<link rel="stylesheet" href="../css/bootstrap/4.5.3/bootstrap.min.css" />
+		<link rel="stylesheet" href="../css/font-awesome/5.15.1/css/all.min.css" />
 		<link rel="stylesheet" href="assets/css/custom.css" />
 		<link rel="stylesheet" href="assets/css/datepicker.css" />
 		<style>
@@ -247,9 +247,9 @@
                                     <label for="housing"><?= $text[LANG]['label_housing'] ?>*</label>
 									<select name="housing" id="housing" data-label="<?= $text[LANG]['label_housing'] ?>" data-tipo="number" class="form-control">
                                         <option value=""><?= $text[LANG]['label_scegli'] ?></option>
-										<?php foreach ($housing_fossata as $id => $val): ?>
-										<option value="<?= $id ?>"><?= $val ?></option>
-										<?php endforeach; ?>
+										<?php //foreach ($housing_fossata as $id => $val): ?>
+										<!-- <option value="<?= $id ?>"><?= $val ?></option> -->
+										<?php //endforeach; ?>
                                     </select>
                                 </div>
                                 <div id="formula-campus" class="col-sm-6" style="display:none">
@@ -383,7 +383,7 @@
 						<h4 class="modal-title"><i class="fa fa-info-circle"></i>&nbsp;&nbsp;<?= $text[LANG]['label_informativa'] ?></h4>
 					</div>
 					<div class="modal-body">
-					<?php  require_once('./assets/php/includes/informativa_'.LANG.'.php'); ?>
+					<?php  require_once('./assets/php/informativa_'.LANG.'.php'); ?>
 					</div>
 					<div class="modal-footer box-button">
 						<button type="button" class="button" data-dismiss="modal"><?= $text[LANG]['label_chiudi'] ?></button>

@@ -325,17 +325,33 @@ class QuestionnaireController extends Controller
         if (!$participant) {
             throw new CHttpException(404, 'Compilazione non trovata.');
         }
-        
-        // Carica le risposte del partecipante
-        $answers = Answer::model()->findAll(array(
+
+        $sections = QuestionnaireSection::model()->with(array(
+            'questions' => array(
+                'order' => 'questions.order ASC',
+                'with' => array('options' => array('order' => 'options.order ASC')),
+            ),
+        ))->findAll(array(
+            'condition' => 'version_id = :version_id',
+            'params' => array(':version_id' => $participant->version_id),
+            'order' => 't.order ASC',
+        ));
+
+        $answers = Answer::model()->with('question')->findAll(array(
             'condition' => 'participant_id = :participant_id',
             'params' => array(':participant_id' => $id),
-            'order' => 'question_id ASC'
         ));
-        
+
+        $answersByQuestionId = array();
+        foreach ($answers as $answer) {
+            $answersByQuestionId[$answer->question_id] = $answer;
+        }
+
         $this->render('viewSubmission', array(
             'participant' => $participant,
-            'answers' => $answers,
+            'sections' => $sections,
+            'answersByQuestionId' => $answersByQuestionId,
+            'answerCount' => count($answers),
         ));
     }
 
@@ -515,33 +531,86 @@ class QuestionnaireController extends Controller
      * @param Answer $answer
      * @return string
      */
-    private function formatAnswerValue($answer)
+    protected function formatAnswerValue($answer)
     {
         if (!$answer->value) {
             return '-';
         }
-        
-        // Carica la domanda se non è già caricata
+
         $question = $answer->question;
         if (!$question) {
             $question = Question::model()->findByPk($answer->question_id);
         }
-        
-        if ($question && in_array($question->type, array('radio', 'checkbox', 'select'))) {
-            // Per domande con opzioni, mostra il testo dell'opzione
-            $values = explode(',', $answer->value);
+
+        if ($question && $question->type === 'custom') {
+            $values = array_map('trim', explode(',', $answer->value));
             $optionTexts = array();
             foreach ($values as $value) {
-                $option = QuestionOption::model()->findByPk(trim($value));
+                if ($value === '') {
+                    continue;
+                }
+
+                $option = QuestionOption::model()->findByPk($value);
                 if ($option) {
                     $optionTexts[] = $option->option_text;
                 } else {
-                    $optionTexts[] = trim($value);
+                    $optionTexts[] = $value;
                 }
             }
-            return implode(', ', $optionTexts);
-        } else {
-            return $answer->value;
+
+            return !empty($optionTexts) ? implode(', ', $optionTexts) : '-';
+        }
+
+        if ($question && in_array($question->type, array('radio', 'checkbox', 'select'), true)) {
+            $values = array_map('trim', explode(',', $answer->value));
+            $optionTexts = array();
+            foreach ($values as $value) {
+                if ($value === '') {
+                    continue;
+                }
+
+                $option = QuestionOption::model()->findByPk($value);
+                if ($option) {
+                    $optionTexts[] = $option->option_text;
+                } else {
+                    $optionTexts[] = $value;
+                }
+            }
+
+            return !empty($optionTexts) ? implode(', ', $optionTexts) : '-';
+        }
+
+        return $answer->value;
+    }
+
+    /**
+     * @param Question $question
+     * @return string
+     */
+    protected function getQuestionTypeLabel($question)
+    {
+        switch ($question->type) {
+            case 'text':
+                return 'Testo';
+            case 'option':
+                return 'Scelta singola';
+            case 'range':
+                return 'Scala';
+            case 'yes_no':
+                return 'Sì/No';
+            case 'custom':
+                switch ($question->getResolvedTypeRender()) {
+                    case 'checkbox':
+                        return 'Scelta multipla';
+                    case 'select':
+                        return 'Menu a tendina';
+                    case 'textarea':
+                        return 'Area di testo';
+                    default:
+                        return 'Scelta singola';
+                }
+            default:
+                return ucfirst($question->type);
         }
     }
 

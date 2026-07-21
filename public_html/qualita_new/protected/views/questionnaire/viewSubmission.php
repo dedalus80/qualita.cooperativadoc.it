@@ -1,7 +1,9 @@
 <?php
 /* @var $this QuestionnaireController */
 /* @var $participant QuestionnaireParticipant */
-/* @var $answers Answer[] */
+/* @var $sections QuestionnaireSection[] */
+/* @var $answersByQuestionId Answer[] */
+/* @var $answerCount int */
 
 $this->breadcrumbs=array(
     'Questionari'=>array('index'),
@@ -131,88 +133,117 @@ $this->breadcrumbs=array(
         <!-- Risposte -->
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-list"></i> Risposte (<?php echo count($answers); ?>)</h3>
+                <h3 class="panel-title"><i class="fa fa-list"></i> Risposte (<?php echo $answerCount; ?>)</h3>
             </div>
             <div class="panel-body">
-                <?php if (empty($answers)): ?>
+                <?php if ($answerCount === 0): ?>
                     <p class="text-muted">Nessuna risposta trovata.</p>
                 <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th width="60">ID</th>
-                                    <th width="200">Domanda</th>
-                                    <th width="100">Tipo</th>
-                                    <th>Risposta</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($answers as $answer): ?>
-                                    <tr>
-                                        <td><?php echo $answer->question_id; ?></td>
-                                        <td>
-                                            <?php 
-                                            $question = Question::model()->findByPk($answer->question_id);
-                                            echo $question ? CHtml::encode($question->text) : 'Domanda non trovata';
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            if ($question) {
-                                                switch ($question->type) {
-                                                    case 'text':
-                                                        echo 'Testo';
-                                                        break;
-                                                    case 'textarea':
-                                                        echo 'Area di testo';
-                                                        break;
-                                                    case 'radio':
-                                                        echo 'Scelta singola';
-                                                        break;
-                                                    case 'checkbox':
-                                                        echo 'Scelta multipla';
-                                                        break;
-                                                    case 'select':
-                                                        echo 'Menu a tendina';
-                                                        break;
-                                                    default:
-                                                        echo ucfirst($question->type);
+                    <?php
+                    $displayedQuestionIds = array();
+                    foreach ($sections as $section):
+                        $sectionHasAnswers = false;
+                        foreach ($section->questions as $question) {
+                            if (isset($answersByQuestionId[$question->id])) {
+                                $sectionHasAnswers = true;
+                                break;
+                            }
+                        }
+                        if (!$sectionHasAnswers) {
+                            continue;
+                        }
+                    ?>
+                        <div class="panel panel-default" style="margin-bottom: 20px;">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><i class="fa fa-folder-open-o"></i> <?php echo CHtml::encode($section->title); ?></h4>
+                            </div>
+                            <div class="panel-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered" style="margin-bottom: 0;">
+                                        <thead>
+                                            <tr>
+                                                <th width="35%">Domanda</th>
+                                                <th width="15%">Tipo</th>
+                                                <th>Risposta</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($section->questions as $question): ?>
+                                                <?php
+                                                if (!isset($answersByQuestionId[$question->id])) {
+                                                    continue;
                                                 }
-                                            } else {
-                                                echo '-';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            if ($answer->value) {
-                                                if ($question && in_array($question->type, ['radio', 'checkbox', 'select'])) {
-                                                    // Per domande con opzioni, mostra il testo dell'opzione
-                                                    $values = explode(',', $answer->value);
-                                                    $optionTexts = array();
-                                                    foreach ($values as $value) {
-                                                        $option = QuestionOption::model()->findByPk(trim($value));
-                                                        if ($option) {
-                                                            $optionTexts[] = CHtml::encode($option->option_text);
-                                                        } else {
-                                                            $optionTexts[] = CHtml::encode(trim($value));
-                                                        }
-                                                    }
-                                                    echo implode(', ', $optionTexts);
-                                                } else {
-                                                    echo CHtml::encode($answer->value);
-                                                }
-                                            } else {
-                                                echo '<span class="text-muted">-</span>';
-                                            }
-                                            ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                                $answer = $answersByQuestionId[$question->id];
+                                                $displayedQuestionIds[$question->id] = true;
+                                                $formattedAnswer = $this->formatAnswerValue($answer);
+                                                ?>
+                                                <tr>
+                                                    <td><?php echo CHtml::encode($question->text); ?></td>
+                                                    <td><?php echo CHtml::encode($this->getQuestionTypeLabel($question)); ?></td>
+                                                    <td>
+                                                        <?php if ($formattedAnswer === '-'): ?>
+                                                            <span class="text-muted">-</span>
+                                                        <?php else: ?>
+                                                            <?php echo CHtml::encode($formattedAnswer); ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+
+                    <?php
+                    $orphanAnswers = array();
+                    foreach ($answersByQuestionId as $questionId => $answer) {
+                        if (!isset($displayedQuestionIds[$questionId])) {
+                            $orphanAnswers[$questionId] = $answer;
+                        }
+                    }
+                    ?>
+
+                    <?php if (!empty($orphanAnswers)): ?>
+                        <div class="panel panel-default" style="margin-bottom: 0;">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><i class="fa fa-question-circle"></i> Altre risposte</h4>
+                            </div>
+                            <div class="panel-body" style="padding: 0;">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered" style="margin-bottom: 0;">
+                                        <thead>
+                                            <tr>
+                                                <th width="35%">Domanda</th>
+                                                <th width="15%">Tipo</th>
+                                                <th>Risposta</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($orphanAnswers as $answer): ?>
+                                                <?php
+                                                $question = $answer->question ?: Question::model()->findByPk($answer->question_id);
+                                                $formattedAnswer = $this->formatAnswerValue($answer);
+                                                ?>
+                                                <tr>
+                                                    <td><?php echo $question ? CHtml::encode($question->text) : 'Domanda non trovata'; ?></td>
+                                                    <td><?php echo $question ? CHtml::encode($this->getQuestionTypeLabel($question)) : '-'; ?></td>
+                                                    <td>
+                                                        <?php if ($formattedAnswer === '-'): ?>
+                                                            <span class="text-muted">-</span>
+                                                        <?php else: ?>
+                                                            <?php echo CHtml::encode($formattedAnswer); ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

@@ -328,18 +328,35 @@ body, html {
 .badge-color { background-color: #0fa56f; } 
 .btn-submit-color { background-color: #0fa56f; } 
 .border-privacy-color { border-color: #0fa56f; border-width: 2px !important; }
-.invalid-feedback { color: #0fa56f; }
+.invalid-feedback { color: var(--bs-danger); }
 .form-check-input.is-invalid, .was-validated .form-check-input:invalid {
-	border-color: #0fa56f !important;
+	border-color: var(--bs-form-invalid-border-color) !important;
 }
 .form-check-input.is-invalid ~ .form-check-label, .was-validated .form-check-input:invalid ~ .form-check-label {
-	color: #0fa56f !important;
+	color: var(--bs-danger) !important;
+}
+.was-validated #privacy_consent:valid ~ .form-check-label,
+.was-validated #privacy_consent:invalid ~ .form-check-label,
+#privacy_consent.is-invalid ~ .form-check-label {
+    color: inherit !important;
+}
+.was-validated #privacy_consent:valid,
+.was-validated #privacy_consent:invalid:not(.is-invalid) {
+    border-color: #0fa56f;
+}
+.was-validated #privacy_consent:checked:valid {
+    background-color: #0fa56f;
+    border-color: #0fa56f;
 }
 .was-validated .form-control:invalid {
-    border-color: #0fa56f !important;
+    border-color: var(--bs-form-invalid-border-color) !important;
 }
 .form-select.is-invalid, .was-validated .form-select:invalid {
-	border-color: #0fa56f !important;
+	border-color: var(--bs-form-invalid-border-color) !important;
+}
+.question-item:has(.invalid-feedback.d-block) {
+    border-color: var(--bs-danger) !important;
+    background-color: rgba(var(--bs-danger-rgb), 0.08);
 }
 .form-select:focus, .form-control:focus {
     border-color: #0fa56f !important;
@@ -479,6 +496,10 @@ body, html {
     <?php if (!empty($questionnaire->description)): ?>
         <p class="lead"><?php echo nl2br(CHtml::encode($questionnaire->description)); ?></p>
     <?php endif; ?>
+</div>
+
+<div id="form-validation-alert" class="alert alert-danger d-none mb-4" role="alert">
+    <strong>Attenzione.</strong> Alcuni campi non sono stati compilati correttamente. Controlla i campi segnalati in rosso e riprova.
 </div>
 
 <?php echo CHtml::beginForm('', 'post', ['class' => 'needs-validation', 'novalidate' => true]); ?>
@@ -1246,12 +1267,11 @@ function submitFormNative(form) {
                 // Validazione specifica per la privacy policy
                 var privacyCheckbox = document.getElementById('privacy_consent');
                 if (privacyCheckbox && !privacyCheckbox.checked) {
-    
-                    privacyCheckbox.setCustomValidity('È necessario accettare la Privacy Policy per procedere.');
+                    $(privacyCheckbox).addClass('is-invalid');
                     $(privacyCheckbox).closest('.card-body').find('.invalid-feedback').addClass('d-block');
                     hasErrors = true;
                 } else if (privacyCheckbox) {
-                    privacyCheckbox.setCustomValidity('');
+                    $(privacyCheckbox).removeClass('is-invalid');
                     $(privacyCheckbox).closest('.card-body').find('.invalid-feedback').removeClass('d-block');
                 }
                 
@@ -1413,8 +1433,12 @@ function submitFormNative(form) {
                 if (hasErrors) {
     
                     form.classList.add('was-validated');
+                    $('#form-validation-alert').removeClass('d-none');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                     return;
                 }
+
+                $('#form-validation-alert').addClass('d-none');
                 
 
                 
@@ -1478,10 +1502,15 @@ $(document).ready(function() {
         var errorDiv = $(this).siblings('.invalid-feedback');
         errorDiv.removeClass('d-block');
     });
+
+    $('input[type=\"text\"][required], input[type=\"email\"][required], input[type=\"date\"][required], textarea[required]').on('input change', function() {
+        var errorDiv = $(this).siblings('.invalid-feedback');
+        errorDiv.removeClass('d-block');
+    });
     
     $('#privacy_consent').on('change', function() {
-        var errorDiv = $(this).closest('.card-body').find('.invalid-feedback');
-        errorDiv.removeClass('d-block');
+        $(this).removeClass('is-invalid');
+        $(this).closest('.card-body').find('.invalid-feedback').removeClass('d-block');
     });
     
     // Event listeners
